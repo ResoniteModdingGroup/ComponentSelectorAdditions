@@ -38,12 +38,10 @@
   
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="" />
-    <None Include="ComponentAttacherFavorites.cs" />
     <None Include="Locale\*" Pack="true" PackagePath="content/Locale/" />
   </ItemGroup>
   
   <ItemGroup>
-    <Compile Remove="ComponentAttacherFavorites.cs" />
     <Compile Remove="ComponentAttacherRecents.cs" />
   </ItemGroup>
 

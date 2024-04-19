@@ -24,6 +24,7 @@ namespace ComponentSelectorSearch
     {
         private const string SearchPath = "/Search/";
 
+        private static readonly char[] _searchSplits = new[] { ' ', ',', '+', '|' };
         private static readonly ConditionalWeakTable<ComponentSelector, AttacherDetails> _selectorDetails = new();
 
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
@@ -108,7 +109,7 @@ namespace ComponentSelectorSearch
                 panel.OffsetMin.Value = buttonLabel.RectTransform.OffsetMin;
                 panel.OffsetMax.Value = buttonLabel.RectTransform.OffsetMax;
 
-                builder.HorizontalHeader(16, out var header, out var content);
+                builder.HorizontalHeader(18, out var header, out var content);
 
                 buttonLabel.Slot.Parent = content.Slot;
                 buttonLabel.RectTransform.OffsetMin.Value = new(16, 0);
@@ -116,7 +117,7 @@ namespace ComponentSelectorSearch
 
                 builder.NestInto(header);
                 var text = builder.Text(GetPrettyPath(result.Category.GetPath()) + " >", parseRTF: false);
-                text.Color.Value = RadiantUI_Constants.Neutrals.MIDLIGHT;
+                text.Color.Value = RadiantUI_Constants.Neutrals.LIGHT;
 
                 builder.NestOut();
                 builder.NestOut();
@@ -130,7 +131,7 @@ namespace ComponentSelectorSearch
         {
             var uiRoot = attacher._uiRoot.Target;
 
-            var builder = SetupUIBuilder(uiRoot.Parent.Parent);
+            var builder = new UIBuilder(uiRoot.Parent.Parent).SetupStyle();
 
             builder.HorizontalHeader(56, out var header, out var content);
             uiRoot.Parent.Parent = content.Slot;
@@ -185,19 +186,21 @@ namespace ComponentSelectorSearch
             if (string.IsNullOrWhiteSpace(search) || (search!.Length < 3 && path.Length < 2))
                 return true;
 
-            var builder = SetupUIBuilder(__instance._uiRoot);
+            var searchParts = search.Split(_searchSplits, StringSplitOptions.RemoveEmptyEntries);
+
+            var builder = new UIBuilder(__instance._uiRoot).SetupStyle();
             builder.Root.DestroyChildren();
 
             if (group != null)
                 builder.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR, __instance.OnOpenCategoryPressed, path + SearchPath + search, .35f);
 
-            foreach (var subCategory in SearchCategories(componentLibrary, search))
+            foreach (var subCategory in SearchCategories(componentLibrary, searchParts))
             {
                 var categoryPath = subCategory.GetPath();
                 builder.Button(GetPrettyPath(categoryPath) + " >", RadiantUI_Constants.Sub.YELLOW, details.OnOpenCategoryPressed, categoryPath, 0.35f).Label.ParseRichText.Value = false;
             }
 
-            var typeResults = SearchTypes(componentLibrary, search);
+            var typeResults = SearchTypes(componentLibrary, searchParts);
 
             var keyCounter = new KeyCounter<string>();
 
@@ -213,6 +216,10 @@ namespace ComponentSelectorSearch
                 AddHoverButtons(builder, __instance, path, search, typeResults, keyCounter, group);
 
             builder.Button("General.Cancel".AsLocaleKey(), RadiantUI_Constants.Sub.RED, details.OnCancelPressed, 0.35f).Slot.OrderOffset = 1000000;
+
+            // Vanilla does this
+            if (path != null && path.StartsWith("/"))
+                path = path[1..];
 
             return false;
         }
@@ -270,7 +277,7 @@ namespace ComponentSelectorSearch
             if (searchIndex >= 0)
             {
                 if (searchIndex + SearchPath.Length < path.Length)
-                    search = path[(searchIndex + SearchPath.Length)..].Replace(" ", "");
+                    search = path[(searchIndex + SearchPath.Length)..];
 
                 path = path.Remove(searchIndex);
             }
@@ -285,7 +292,7 @@ namespace ComponentSelectorSearch
             return categoryNode;
         }
 
-        private static IEnumerable<CategoryNode<Type>> SearchCategories(CategoryNode<Type> root, string? search = null)
+        private static IEnumerable<CategoryNode<Type>> SearchCategories(CategoryNode<Type> root, string[]? search = null)
         {
             var returnAll = search is null;
             var queue = new Queue<CategoryNode<Type>>();
@@ -300,7 +307,7 @@ namespace ComponentSelectorSearch
                 if (ConfigSection.HasExcludedCategory(category.GetPath()))
                     continue;
 
-                if (returnAll || SearchContains(category.Name, search!))
+                if (returnAll || SearchContains(category.Name, search!) > 0)
                     yield return category;
 
                 foreach (var subCategory in category.Subcategories)
@@ -308,31 +315,20 @@ namespace ComponentSelectorSearch
             }
         }
 
-        private static bool SearchContains(string haystack, string needle)
-            => CultureInfo.InvariantCulture.CompareInfo.IndexOf(haystack, needle, CompareOptions.IgnoreCase) >= 0;
+        private static int SearchContains(string haystack, string[] needles)
+            => needles.Count(needle => CultureInfo.InvariantCulture.CompareInfo.IndexOf(haystack, needle, CompareOptions.IgnoreCase) >= 0);
 
-        private static IEnumerable<ComponentResult> SearchTypes(CategoryNode<Type> root, string search)
+        private static IEnumerable<ComponentResult> SearchTypes(CategoryNode<Type> root, string[] search)
             => root.Elements
-                .Where(type => SearchContains(type.Name, search))
-                .Select(type => new ComponentResult(root, type))
+                .Select(type => (Category: root, Type: type, Matches: SearchContains(type.Name, search)))
                 .Concat(
                     SearchCategories(root)
-                    .SelectMany(category =>
-                        category.Elements
-                        .Where(type => SearchContains(type.Name, search))
-                        .Select(type => new ComponentResult(category, type))))
-                .OrderBy(result => result.Type.Name);
-
-        private static UIBuilder SetupUIBuilder(Slot root)
-        {
-            var builder = new UIBuilder(root);
-            RadiantUI_Constants.SetupEditorStyle(builder, extraPadding: true);
-
-            builder.Style.TextAlignment = Alignment.MiddleLeft;
-            builder.Style.ButtonTextAlignment = Alignment.MiddleLeft;
-            builder.Style.MinHeight = 32;
-
-            return builder;
-        }
+                    .SelectMany(category => category.Elements
+                        .Select(type => (Category: category, Type: type, Matches: SearchContains(type.Name, search)))))
+                .Where(match => match.Matches > 0)
+                .OrderBy(match => match.Type.Name)
+                .OrderByDescending(match => match.Matches)
+                .Select(match => new ComponentResult(match.Category, match.Type))
+                .Take(ConfigSection.MaxResultCount);
     }
 }
