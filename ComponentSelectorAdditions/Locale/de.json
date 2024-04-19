@@ -1,0 +1,7 @@
+{
+  "localeCode": "de",
+  "authors": [ "Banane9" ],
+  "messages": {
+    "ComponentSelectorAdditions.Search": "<i>Suchen ...</i>"
+  }
+}

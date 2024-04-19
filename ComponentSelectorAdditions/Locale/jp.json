@@ -1,0 +1,8 @@
+{
+  "localeCode": "jp",
+  "authors": [ "Aesc" ],
+  "messages": {
+    "FlexibleContactsSort.Pin": "ピン留めする",
+    "FlexibleContactsSort.Unpin": "ピン留めを外す"
+  }
+}
