@@ -1,0 +1,22 @@
+﻿using FrooxEngine;
+using FrooxEngine.UIX;
+using MonkeyLoader.Resonite.Events;
+using System;
+
+namespace ComponentSelectorAdditions.Events
+{
+    public abstract class BuildSelectorEvent : BuildUIEvent
+    {
+        public bool AddsBackButton { get; set; }
+        public bool AddsCancelButton { get; set; }
+        public ComponentSelector Selector { get; }
+        internal Action<bool>? ShowBackButtonChangedHandlers => ShowBackButtonChanged;
+
+        internal BuildSelectorEvent(ComponentSelector selector, UIBuilder ui) : base(ui)
+        {
+            Selector = selector;
+        }
+
+        public event Action<bool>? ShowBackButtonChanged;
+    }
+}
