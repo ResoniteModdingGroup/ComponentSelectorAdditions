@@ -496,13 +496,13 @@ namespace ComponentSelectorAdditions
             SetupStyle(ui);
             ui.Style.ForceExpandHeight = false;
 
-            var verticalLayout = ui.VerticalLayout(16, 8);
+            var verticalLayout = ui.VerticalLayout(8, 8);
 
             var headerEventData = OnBuildHeader(__instance, ui);
 
             ui.Style.FlexibleHeight = 1;
             ui.ScrollArea();
-            ui.VerticalLayout(8f);
+            ui.VerticalLayout(8, 8, 0, 8, 0);
             ui.FitContent(SizeFit.Disabled, SizeFit.MinSize);
             __instance._uiRoot.Target = ui.Root;
             ui.Style.FlexibleHeight = -1;
@@ -510,8 +510,8 @@ namespace ComponentSelectorAdditions
             ui.NestInto(verticalLayout.RectTransform);
             var footerEventData = OnBuildFooter(__instance, ui, headerEventData.SearchBar, headerEventData.AddsBackButton, headerEventData.AddsCancelButton);
 
-            var showBackButtonChangedHandlers = headerEventData.BackButtonChangedHandlers;
-            showBackButtonChangedHandlers += footerEventData.BackButtonChangedHandlers;
+            var showBackButtonChangedHandlers = headerEventData.SelectorUIChangedHandlers;
+            showBackButtonChangedHandlers += footerEventData.SelectorUIChangedHandlers;
 
             var selectorData = new SelectorData(
                 headerEventData.AddsBackButton || footerEventData.AddsBackButton,

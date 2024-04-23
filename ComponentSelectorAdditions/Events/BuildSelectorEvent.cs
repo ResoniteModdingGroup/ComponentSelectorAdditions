@@ -16,13 +16,13 @@ namespace ComponentSelectorAdditions.Events
 
         public SelectorSearchBar? SearchBar { get; set; }
         public ComponentSelector Selector { get; }
-        internal Action<SelectorPath, bool>? BackButtonChangedHandlers => BackButtonChanged;
+        internal Action<SelectorPath, bool>? SelectorUIChangedHandlers => SelectorUIChanged;
 
         internal BuildSelectorEvent(ComponentSelector selector, UIBuilder ui) : base(ui)
         {
             Selector = selector;
         }
 
-        public event Action<SelectorPath, bool>? BackButtonChanged;
+        public event Action<SelectorPath, bool>? SelectorUIChanged;
     }
 }

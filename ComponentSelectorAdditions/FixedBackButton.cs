@@ -28,7 +28,7 @@ namespace ComponentSelectorAdditions
             var relay = button.Slot.GetComponent<ButtonRelay<string>>();
 
             eventData.AddsBackButton = true;
-            eventData.BackButtonChanged += (path, showBackButton) =>
+            eventData.SelectorUIChanged += (path, showBackButton) =>
             {
                 button.Slot.ActiveSelf = showBackButton;
                 relay.Argument.Value = path.OpenParentCategoryPath;
