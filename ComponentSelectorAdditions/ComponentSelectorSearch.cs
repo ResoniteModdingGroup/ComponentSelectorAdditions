@@ -18,8 +18,8 @@ using Zio;
 
 namespace ComponentSelectorSearch
 {
-    [HarmonyPatch(typeof(ComponentSelector), "BuildUI")]
-    [HarmonyPatchCategory(nameof(ComponentSelectorSearch))]
+    // [HarmonyPatch(typeof(ComponentSelector), "BuildUI")]
+    // [HarmonyPatchCategory(nameof(ComponentSelectorSearch))]
     internal sealed class ComponentSelectorSearch : ConfiguredResoniteMonkey<ComponentSelectorSearch, SearchConfig>
     {
         private const string SearchPath = "/Search/";

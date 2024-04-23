@@ -9,7 +9,6 @@ using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,14 +19,18 @@ using System.Threading.Tasks;
 namespace ComponentSelectorAdditions
 {
     [HarmonyPatch(typeof(ComponentSelector))]
-    [HarmonyPatch(nameof(ComponentSelectorInjector))]
+    [HarmonyPatchCategory(nameof(ComponentSelectorInjector))]
     internal sealed class ComponentSelectorInjector : ResoniteMonkey<ComponentSelectorInjector>,
-        IEventSource<BuildSelectorHeaderEvent>, IEventSource<BuildSelectorEvent>,
+        IEventSource<BuildSelectorHeaderEvent>, IEventSource<BuildSelectorFooterEvent>,
         ICancelableEventSource<EnumerateCategoriesEvent>, ICancelableEventSource<EnumerateComponentsEvent>,
+        ICancelableEventSource<BuildCategoryButtonEvent>, ICancelableEventSource<BuildGroupButtonEvent>, ICancelableEventSource<BuildComponentButtonEvent>,
         IEventSource<EnumerateConcreteGenericsEvent>
     {
         private static readonly ConditionalWeakTable<ComponentSelector, SelectorData> _selectorData = new();
-        private static EventDispatching<BuildSelectorEvent>? _buildFooter;
+        private static CancelableEventDispatching<BuildCategoryButtonEvent>? _buildCategoryButton;
+        private static CancelableEventDispatching<BuildComponentButtonEvent>? _buildComponentButton;
+        private static EventDispatching<BuildSelectorFooterEvent>? _buildFooter;
+        private static CancelableEventDispatching<BuildGroupButtonEvent>? _buildGroupButton;
         private static EventDispatching<BuildSelectorHeaderEvent>? _buildHeader;
         private static CancelableEventDispatching<EnumerateCategoriesEvent>? _enumerateCategories;
         private static CancelableEventDispatching<EnumerateComponentsEvent>? _enumerateComponents;
@@ -38,10 +41,15 @@ namespace ComponentSelectorAdditions
         protected override bool OnEngineReady()
         {
             Mod.RegisterEventSource<BuildSelectorHeaderEvent>(this);
-            Mod.RegisterEventSource<BuildSelectorEvent>(this);
+            Mod.RegisterEventSource<BuildSelectorFooterEvent>(this);
+
             Mod.RegisterEventSource<EnumerateCategoriesEvent>(this);
             Mod.RegisterEventSource<EnumerateComponentsEvent>(this);
             Mod.RegisterEventSource<EnumerateConcreteGenericsEvent>(this);
+
+            Mod.RegisterEventSource<BuildCategoryButtonEvent>(this);
+            Mod.RegisterEventSource<BuildGroupButtonEvent>(this);
+            Mod.RegisterEventSource<BuildComponentButtonEvent>(this);
 
             return base.OnEngineReady();
         }
@@ -59,13 +67,13 @@ namespace ComponentSelectorAdditions
 
                 if (rootCategory is null)
                 {
-                    path = new SelectorPath(selector._rootPath, true);
+                    path = new SelectorPath(selector._rootPath, null, true);
                     rootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(path.Path);
 
                     if (rootCategory is null)
                     {
                         selector._rootPath.Value = "/";
-                        path = new SelectorPath("/", true);
+                        path = new SelectorPath("/", null, true);
                         rootCategory = WorkerInitializer.ComponentLibrary;
                     }
                 }
@@ -74,85 +82,42 @@ namespace ComponentSelectorAdditions
             if (rootCategory != WorkerInitializer.ComponentLibrary && !doNotGenerateBack)
             {
                 ui.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR,
-                    selector.OnOpenCategoryPressed, path.HasGroup ? path.OpenCategoryPath : rootCategory.Parent.GetPath(), 0.35f);
+                    selector.OnOpenCategoryPressed, path.OpenParentCategoryPath, 0.35f);
             }
 
-            KeyCounter<string> keyCounter = null;
-            HashSet<string> hashSet = null;
-            if (group == null)
+            var enumerateComponentsData = OnEnumerateComponents(path, rootCategory, selector.ComponentFilter.Target ?? Yes);
+
+            KeyCounter<string>? groupCounter = null;
+            HashSet<string>? groupNames = null;
+
+            if (!path.HasGroup)
             {
-                foreach (CategoryNode<Type> subcategory in rootCategory.Subcategories)
-                {
-                    UIBuilder uIBuilder8 = ui;
-                    text2 = subcategory.Name + " >";
-                    tint = RadiantUI_Constants.Sub.YELLOW;
-                    uIBuilder8.Button(in text2, in tint, OnOpenCategoryPressed, path + "/" + subcategory.Name, 0.35f).Label.ParseRichText.Value = false;
-                }
-                keyCounter = new KeyCounter<string>();
-                hashSet = new HashSet<string>();
-                foreach (Type element in rootCategory.Elements)
-                {
-                    GroupingAttribute customAttribute = element.GetCustomAttribute<GroupingAttribute>();
-                    if (customAttribute != null)
-                    {
-                        keyCounter.Increment(customAttribute.GroupName);
-                    }
-                }
+                var enumerateCategoriesData = OnEnumerateCategories(path, rootCategory);
+
+                foreach (var category in enumerateCategoriesData.Items)
+                    OnBuildCategoryButton(selector, ui, rootCategory, category);
+
+                groupCounter = new KeyCounter<string>();
+                groupNames = new HashSet<string>();
+
+                foreach (var component in enumerateComponentsData.Items.Where(component => component.HasGroup))
+                    groupCounter.Increment(component.Group!);
             }
 
-            List<Button> list = Pool.BorrowList<Button>();
-            foreach (Type element2 in rootCategory.Elements)
+            foreach (var component in enumerateComponentsData.Items)
             {
-                if (ComponentFilter.Target != null && !ComponentFilter.Target(element2))
+                if (path.HasGroup && component.Group != path.Group)
+                    continue;
+
+                if (!path.HasGroup && component.HasGroup && groupCounter![component.Group] > 1)
                 {
+                    if (groupNames!.Add(component.Group))
+                        OnBuildGroupButton(selector, ui, rootCategory, component);
+
                     continue;
                 }
-                GroupingAttribute customAttribute2 = element2.GetCustomAttribute<GroupingAttribute>();
-                if (group != null && customAttribute2?.GroupName != group)
-                {
-                    continue;
-                }
-                Button button2;
-                if (group == null && customAttribute2 != null && keyCounter[customAttribute2.GroupName] > 1)
-                {
-                    if (!hashSet.Add(customAttribute2.GroupName))
-                    {
-                        continue;
-                    }
-                    string text3 = customAttribute2.GroupName.Split('.')?.Last();
-                    UIBuilder uIBuilder9 = ui;
-                    text2 = text3;
-                    tint = RadiantUI_Constants.Sub.PURPLE;
-                    button2 = uIBuilder9.Button(in text2, in tint, OpenGroupPressed, path + ":" + customAttribute2.GroupName, 0.35f);
-                    list.Add(button2);
-                }
-                else if (element2.IsGenericTypeDefinition)
-                {
-                    string text4 = Path.Combine(path, element2.FullName);
-                    if (group != null)
-                    {
-                        text4 = text4 + "?" + group;
-                    }
-                    UIBuilder uIBuilder10 = ui;
-                    text2 = element2.GetNiceName();
-                    tint = RadiantUI_Constants.Sub.GREEN;
-                    button2 = uIBuilder10.Button(in text2, in tint, OpenGenericTypesPressed, text4, 0.35f);
-                    list.Add(button2);
-                }
-                else
-                {
-                    UIBuilder uIBuilder11 = ui;
-                    text2 = element2.GetNiceName();
-                    tint = RadiantUI_Constants.Sub.CYAN;
-                    button2 = uIBuilder11.Button(in text2, in tint, OnAddComponentPressed, element2.FullName, 0.35f);
-                }
-                button2.Label.ParseRichText.Value = false;
-                list.Add(button2);
-            }
-            list.Sort((Button a, Button b) => a.LabelText.CompareTo(b.LabelText));
-            for (int j = 0; j < list.Count; j++)
-            {
-                list[j].Slot.OrderOffset = 10 + j;
+
+                OnBuildComponentButton(selector, ui, path, rootCategory, component);
             }
         }
 
@@ -162,7 +127,7 @@ namespace ComponentSelectorAdditions
             selector._genericType.Value = type;
 
             if (!doNotGenerateBack)
-                ui.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR, selector.OnOpenCategoryPressed, path.OpenCategoryPath, 0.35f);
+                ui.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR, selector.OnOpenCategoryPressed, path.OpenParentCategoryPath, 0.35f);
 
             ui.Text("ComponentSelector.CustomGenericArguments".AsLocaleKey());
 
@@ -182,8 +147,6 @@ namespace ComponentSelectorAdditions
             selector._customGenericTypeColor.Target = button.BaseColor;
 
             var concreteGenericsEventData = OnEnumerateConcreteGenerics(type);
-            foreach (var concreteGeneric in WorkerInitializer.GetCommonGenericTypes(type))
-                concreteGenericsEventData.AddItem(concreteGeneric);
 
             ui.Text("ComponentSelector.CustomGenericArguments".AsLocaleKey());
 
@@ -233,12 +196,93 @@ namespace ComponentSelectorAdditions
                 return false;
             }
 
-            BuildCategoryUI(__instance, ui, selectorPath);
+            BuildCategoryUI(__instance, ui, selectorPath, doNotGenerateBack);
 
             if (!selectorData.HasCancelButton)
                 ui.Button("General.Cancel".AsLocaleKey(), RadiantUI_Constants.Sub.RED, __instance.OnCancelPressed, 0.35f).Slot.OrderOffset = 1000000L;
 
             return false;
+        }
+
+        private static string GetPrettyPath<T>(CategoryNode<T> category)
+            => category.GetPath()[1..].Replace("/", " > ") + " >";
+
+        private static void OnBuildCategoryButton(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, CategoryNode<Type> subCategory)
+        {
+            var root = ui.Root;
+            var eventData = new BuildCategoryButtonEvent(selector, ui, rootCategory, subCategory);
+
+            try
+            {
+                _buildCategoryButton?.TryInvokeAll(eventData);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Warn(() => ex.Format("Some Build Category Button Event handlers threw an exception:"));
+            }
+
+            if (!eventData.Canceled)
+            {
+                ui.Button(
+                eventData.IsDirectItem ? $"{subCategory.Name} >" : GetPrettyPath(subCategory),
+                RadiantUI_Constants.Sub.YELLOW, selector.OnOpenCategoryPressed, subCategory.GetPath(),
+                0.35f).Label.ParseRichText.Value = false;
+            }
+
+            ui.NestInto(root);
+        }
+
+        private static void OnBuildComponentButton(ComponentSelector selector, UIBuilder ui, SelectorPath path, CategoryNode<Type> rootCategory, ComponentResult component)
+        {
+            var root = ui.Root;
+            var eventData = new BuildComponentButtonEvent(selector, ui, path, rootCategory, component);
+
+            try
+            {
+                _buildComponentButton?.TryInvokeAll(eventData);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Warn(() => ex.Format("Some Build Component Button Event handlers threw an exception:"));
+            }
+
+            if (!eventData.Canceled)
+            {
+                ui.PushStyle();
+                ui.Style.MinHeight = eventData.IsDirectItem ? 32 : 48;
+
+                var name = component.NiceName;
+                var fullName = path.HasGroup ? $"{component.FullName}?{path.Group}" : component.FullName;
+
+                var button = component.IsGeneric ?
+                         ui.Button(name, RadiantUI_Constants.Sub.GREEN, selector.OpenGenericTypesPressed, path.Path + "/" + fullName, .35f)
+                         : ui.Button(name, RadiantUI_Constants.Sub.CYAN, selector.OnAddComponentPressed, component.FullName, .35f);
+
+                if (!eventData.IsDirectItem)
+                {
+                    var buttonLabel = button.Label;
+                    buttonLabel.ParseRichText.Value = false;
+                    ui.NestInto(button.RectTransform);
+
+                    var panel = ui.Panel();
+                    panel.OffsetMin.Value = buttonLabel.RectTransform.OffsetMin;
+                    panel.OffsetMax.Value = buttonLabel.RectTransform.OffsetMax;
+
+                    ui.HorizontalHeader(18, out var header, out var content);
+
+                    buttonLabel.Slot.Parent = content.Slot;
+                    buttonLabel.RectTransform.OffsetMin.Value = new(16, 0);
+                    buttonLabel.RectTransform.OffsetMax.Value = float2.Zero;
+
+                    ui.NestInto(header);
+                    var text = ui.Text(GetPrettyPath(component.Category), parseRTF: false);
+                    text.Color.Value = RadiantUI_Constants.Neutrals.LIGHT;
+                }
+
+                ui.PopStyle();
+            }
+
+            ui.NestInto(root);
         }
 
         private static BuildSelectorFooterEvent OnBuildFooter(ComponentSelector selector, UIBuilder ui, bool hasBackButton, bool hasCancelButton)
@@ -257,6 +301,31 @@ namespace ComponentSelectorAdditions
             return eventData;
         }
 
+        private static void OnBuildGroupButton(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, ComponentResult groupComponent)
+        {
+            var root = ui.Root;
+            var eventData = new BuildGroupButtonEvent(selector, ui, rootCategory, groupComponent);
+
+            try
+            {
+                _buildGroupButton?.TryInvokeAll(eventData);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Warn(() => ex.Format("Some Build Group Button Event handlers threw an exception:"));
+            }
+
+            if (!eventData.Canceled)
+            {
+                ui.Button(
+                eventData.IsDirectItem ? groupComponent.GroupName : GetPrettyPath(groupComponent.Category) + groupComponent.GroupName,
+                RadiantUI_Constants.Sub.PURPLE, selector.OnOpenCategoryPressed, $"{groupComponent.Category.GetPath()}:{groupComponent.Group}",
+                0.35f).Label.ParseRichText.Value = false;
+            }
+
+            ui.NestInto(root);
+        }
+
         private static BuildSelectorHeaderEvent OnBuildHeader(ComponentSelector selector, UIBuilder ui)
         {
             var eventData = new BuildSelectorHeaderEvent(selector, ui);
@@ -268,6 +337,50 @@ namespace ComponentSelectorAdditions
             catch (AggregateException ex)
             {
                 Logger.Warn(() => ex.Format("Some Build Selector Header Event handlers threw an exception:"));
+            }
+
+            return eventData;
+        }
+
+        private static EnumerateCategoriesEvent OnEnumerateCategories(SelectorPath path, CategoryNode<Type> category)
+        {
+            var eventData = new EnumerateCategoriesEvent(path);
+
+            try
+            {
+                _enumerateCategories?.TryInvokeAll(eventData);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Warn(() => ex.Format("Some Enumerate Categories Event handlers threw an exception:"));
+            }
+
+            if (!eventData.Canceled && !path.HasGroup)
+            {
+                foreach (var subcategory in category.Subcategories)
+                    eventData.AddItem(subcategory);
+            }
+
+            return eventData;
+        }
+
+        private static EnumerateComponentsEvent OnEnumerateComponents(SelectorPath path, CategoryNode<Type> category, Predicate<Type> componentFilter)
+        {
+            var eventData = new EnumerateComponentsEvent(path, category, componentFilter);
+
+            try
+            {
+                _enumerateComponents?.TryInvokeAll(eventData);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Warn(() => ex.Format("Some Enumerate Components Event handlers threw an exception:"));
+            }
+
+            if (!eventData.Canceled)
+            {
+                foreach (var type in category.Elements)
+                    eventData.AddItem(new ComponentResult(category, type));
             }
 
             return eventData;
@@ -285,6 +398,9 @@ namespace ComponentSelectorAdditions
             {
                 Logger.Warn(() => ex.Format("Some Enumerate Concrete Generics Event handlers threw an exception:"));
             }
+
+            foreach (var concreteGeneric in WorkerInitializer.GetCommonGenericTypes(component))
+                eventData.AddItem(concreteGeneric);
 
             return eventData;
         }
@@ -346,7 +462,9 @@ namespace ComponentSelectorAdditions
             return false;
         }
 
-        event EventDispatching<BuildSelectorEvent>? IEventSource<BuildSelectorEvent>.Dispatching
+        private static bool Yes(Type _) => true;
+
+        event EventDispatching<BuildSelectorFooterEvent>? IEventSource<BuildSelectorFooterEvent>.Dispatching
         {
             add => _buildFooter += value;
             remove => _buildFooter -= value;
@@ -376,6 +494,24 @@ namespace ComponentSelectorAdditions
             remove => _enumerateConcreteGenerics -= value;
         }
 
+        event CancelableEventDispatching<BuildComponentButtonEvent>? ICancelableEventSource<BuildComponentButtonEvent>.Dispatching
+        {
+            add => _buildComponentButton += value;
+            remove => _buildComponentButton -= value;
+        }
+
+        event CancelableEventDispatching<BuildGroupButtonEvent>? ICancelableEventSource<BuildGroupButtonEvent>.Dispatching
+        {
+            add => _buildGroupButton += value;
+            remove => _buildGroupButton -= value;
+        }
+
+        event CancelableEventDispatching<BuildCategoryButtonEvent>? ICancelableEventSource<BuildCategoryButtonEvent>.Dispatching
+        {
+            add => _buildCategoryButton += value;
+            remove => _buildCategoryButton -= value;
+        }
+
         private sealed class SelectorData
         {
             public bool HasBackButton { get; }
@@ -390,3 +526,4 @@ namespace ComponentSelectorAdditions
             }
         }
     }
+}

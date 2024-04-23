@@ -23,41 +23,16 @@ namespace ComponentSelectorAdditions
 
         public bool IsRootCategory => PathSegments.Length == 0;
         public bool IsSelectorRoot { get; }
-        public string OpenCategoryPath => HasGroup ? $"{Path}?{Group}" : Path;
-        public string OpenGroupPath => HasGroup ? $"{Path}:{Group}" : Path;
+        public string OpenParentCategoryPath => $"/{PathSegments.Take(PathSegments.Length - 1).Join(delimiter: "/")}{(HasGroup ? $"?{Group}" : "")}";
+
         public string Path { get; }
         public string[] PathSegments { get; }
         public string? Search { get; }
 
-        internal SelectorPath(string? rawPath, bool isSelectorRoot)
-        {
-            IsSelectorRoot = isSelectorRoot;
-
-            var groupSplit = rawPath?.Split(_groupSeparators, StringSplitOptions.RemoveEmptyEntries);
-
-            if (groupSplit is null || groupSplit.Length == 0)
-            {
-                Path = "/";
-                PathSegments = Array.Empty<string>();
-                return;
-            }
-
-            if (groupSplit.Length > 1)
-                Group = groupSplit[1];
-
-            var pathSplit = groupSplit[0].Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries);
-            PathSegments = pathSplit.TakeWhile(segment => !SearchSegment.Equals(segment, StringComparison.OrdinalIgnoreCase)).ToArray();
-
-            Path = $"/{PathSegments.Join(delimiter: "/")}";
-
-            // PathSegments ends before search, so +2 must be the search string
-            if (pathSplit.Length > PathSegments.Length + 1)
-                Search = pathSplit[pathSplit.Length + 1];
-        }
-
         internal SelectorPath(string? rawPath, string? group, bool isSelectorRoot)
         {
             Group = group;
+            IsSelectorRoot = isSelectorRoot;
 
             var pathSplit = rawPath?.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries);
             PathSegments = pathSplit?.TakeWhile(segment => !SearchSegment.Equals(segment, StringComparison.OrdinalIgnoreCase)).ToArray() ?? Array.Empty<string>();

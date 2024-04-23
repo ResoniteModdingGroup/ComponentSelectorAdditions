@@ -14,8 +14,8 @@ using System.Reflection;
 
 namespace ComponentSelectorAdditions
 {
-    [HarmonyPatch(typeof(ComponentSelector), "BuildUI")]
-    [HarmonyPatchCategory(nameof(ComponentSelectorFavorites))]
+    // [HarmonyPatch(typeof(ComponentSelector), "BuildUI")]
+    // [HarmonyPatchCategory(nameof(ComponentSelectorFavorites))]
     internal sealed class ComponentSelectorFavorites : ConfiguredResoniteMonkey<ComponentSelectorFavorites, FavoritesConfig>
     {
         private const string FavoritesPath = "Favorites";

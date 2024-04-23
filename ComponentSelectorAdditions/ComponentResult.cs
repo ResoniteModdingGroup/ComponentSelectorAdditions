@@ -10,14 +10,20 @@ using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {
-    internal readonly struct ComponentResult
+    public sealed class ComponentResult
     {
         public CategoryNode<Type> Category { get; }
+        public string FullName => Type.FullName;
         public string? Group { get; }
 
-        [MemberNotNullWhen(true, nameof(Group))]
+        public string? GroupName { get; }
+
+        [MemberNotNullWhen(true, nameof(Group), nameof(GroupName))]
         public bool HasGroup => Group is not null;
 
+        public bool IsGeneric => Type.IsGenericTypeDefinition;
+
+        public string NiceName => Type.GetNiceName();
         public Type Type { get; }
 
         public ComponentResult(CategoryNode<Type> category, Type type)
@@ -25,6 +31,7 @@ namespace ComponentSelectorAdditions
             Type = type;
             Category = category;
             Group = type.GetCustomAttribute<GroupingAttribute>()?.GroupName;
+            GroupName = Group?.Split('.').Last();
         }
     }
 }
