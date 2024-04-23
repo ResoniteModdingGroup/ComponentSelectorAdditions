@@ -4,11 +4,13 @@ using FrooxEngine;
 using FrooxEngine.UIX;
 using HarmonyLib;
 using MonkeyLoader;
+using MonkeyLoader.Configuration;
 using MonkeyLoader.Events;
 using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -54,30 +56,32 @@ namespace ComponentSelectorAdditions
             return base.OnEngineReady();
         }
 
-        private static void BuildCategoryUI(ComponentSelector selector, UIBuilder ui, SelectorPath path, bool doNotGenerateBack)
+        private static void BuildCategoryUI(ComponentSelector selector, UIBuilder ui, SelectorData selectorData, bool doNotGenerateBack)
         {
             CategoryNode<Type> rootCategory;
-            if (path.IsRootCategory)
+            if (selectorData.CurrentPath.IsRootCategory)
             {
                 rootCategory = WorkerInitializer.ComponentLibrary;
             }
             else
             {
-                rootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(path.Path);
+                rootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(selectorData.CurrentPath.Path);
 
                 if (rootCategory is null)
                 {
-                    path = new SelectorPath(selector._rootPath, false, null, true);
-                    rootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(path.Path);
+                    selectorData.CurrentPath = new SelectorPath(selector._rootPath, selectorData.CurrentPath.Search, false, null, true);
+                    rootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(selectorData.CurrentPath.Path);
 
                     if (rootCategory is null)
                     {
                         selector._rootPath.Value = null;
-                        path = new SelectorPath("/", false, null, true);
+                        selectorData.CurrentPath = new SelectorPath("/", selectorData.CurrentPath.Search, false, null, true);
                         rootCategory = WorkerInitializer.ComponentLibrary;
                     }
                 }
             }
+
+            var path = selectorData.CurrentPath;
 
             if (rootCategory != WorkerInitializer.ComponentLibrary && !doNotGenerateBack)
             {
@@ -179,7 +183,8 @@ namespace ComponentSelectorAdditions
             else if ((string.IsNullOrEmpty(path?.TrimStart('/')) || __instance._rootPath.Value == path?.TrimStart('/')) && group is null)
                 doNotGenerateBack = true;
 
-            var selectorPath = new SelectorPath(path, genericType, group, __instance._rootPath.Value == path);
+            var selectorPath = new SelectorPath(path, selectorData.SearchBar?.Text.Content, genericType, group, __instance._rootPath.Value == path);
+            selectorData.CurrentPath = selectorPath;
 
             OnSelectorBackButtonChanged(selectorData.BackButtonChanged, selectorPath, !doNotGenerateBack);
             doNotGenerateBack = selectorData.HasBackButton;
@@ -196,7 +201,7 @@ namespace ComponentSelectorAdditions
                 return false;
             }
 
-            BuildCategoryUI(__instance, ui, selectorPath, doNotGenerateBack);
+            BuildCategoryUI(__instance, ui, selectorData, doNotGenerateBack);
 
             if (!selectorData.HasCancelButton)
                 ui.Button("General.Cancel".AsLocaleKey(), RadiantUI_Constants.Sub.RED, __instance.OnCancelPressed, 0.35f).Slot.OrderOffset = 1000000L;
@@ -206,6 +211,30 @@ namespace ComponentSelectorAdditions
 
         private static string GetPrettyPath<T>(CategoryNode<T> category)
             => category.GetPath()[1..].Replace("/", " > ") + " >";
+
+        private static SyncFieldEvent<string> MakeBuildUICall(ComponentSelector selector, SelectorData details)
+        {
+            return field =>
+            {
+                var token = details.SearchBar!.UpdateSearch();
+
+                selector.StartTask(async () =>
+                {
+                    if (details.SearchBar!.SearchRefreshDelay > 0)
+                    {
+                        await default(ToBackground);
+                        await Task.Delay(details.SearchBar!.SearchRefreshDelay);
+                        await default(NextUpdate);
+                    }
+
+                    // Only refresh UI with search results if there was no further update immediately following it
+                    if (token.IsCancellationRequested || selector.IsDestroyed)
+                        return;
+
+                    selector.BuildUI(details.CurrentPath.Path, false);
+                });
+            };
+        }
 
         private static void OnBuildCategoryButton(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, CategoryNode<Type> subCategory)
         {
@@ -285,9 +314,9 @@ namespace ComponentSelectorAdditions
             ui.NestInto(root);
         }
 
-        private static BuildSelectorFooterEvent OnBuildFooter(ComponentSelector selector, UIBuilder ui, bool hasBackButton, bool hasCancelButton)
+        private static BuildSelectorFooterEvent OnBuildFooter(ComponentSelector selector, UIBuilder ui, SelectorSearchBar? searchBar, bool hasBackButton, bool hasCancelButton)
         {
-            var eventData = new BuildSelectorFooterEvent(selector, ui, hasBackButton, hasCancelButton);
+            var eventData = new BuildSelectorFooterEvent(selector, ui, searchBar, hasBackButton, hasCancelButton);
 
             try
             {
@@ -448,15 +477,21 @@ namespace ComponentSelectorAdditions
             ui.Style.FlexibleHeight = -1;
 
             ui.NestInto(verticalLayout.RectTransform);
-            var footerEventData = OnBuildFooter(__instance, ui, headerEventData.AddsBackButton, headerEventData.AddsCancelButton);
+            var footerEventData = OnBuildFooter(__instance, ui, headerEventData.SearchBar, headerEventData.AddsBackButton, headerEventData.AddsCancelButton);
 
             var showBackButtonChangedHandlers = headerEventData.BackButtonChangedHandlers;
             showBackButtonChangedHandlers += footerEventData.BackButtonChangedHandlers;
 
-            _selectorData.Add(__instance, new SelectorData(
+            var selectorData = new SelectorData(
                 headerEventData.AddsBackButton || footerEventData.AddsBackButton,
                 headerEventData.AddsCancelButton || footerEventData.AddsCancelButton,
-                showBackButtonChangedHandlers));
+                showBackButtonChangedHandlers,
+                headerEventData.SearchBar ?? footerEventData.SearchBar);
+
+            _selectorData.Add(__instance, selectorData);
+
+            if (selectorData.HasSearchBar)
+                selectorData.SearchBar.Text.Content.OnValueChange += MakeBuildUICall(__instance, selectorData);
 
             __instance.BuildUI(null);
 
@@ -516,14 +551,23 @@ namespace ComponentSelectorAdditions
         private sealed class SelectorData
         {
             public Action<SelectorPath, bool>? BackButtonChanged { get; }
+            public SelectorPath CurrentPath { get; set; }
             public bool HasBackButton { get; }
             public bool HasCancelButton { get; }
 
-            public SelectorData(bool hasBackButton, bool hasCancelButton, Action<SelectorPath, bool>? backButtonChanged)
+            [MemberNotNullWhen(true, nameof(SearchBar))]
+            public bool HasSearchBar => SearchBar is not null;
+
+            public SelectorSearchBar? SearchBar { get; }
+
+            public SelectorData(bool hasBackButton, bool hasCancelButton, Action<SelectorPath, bool>? backButtonChanged, SelectorSearchBar? searchBar)
             {
                 HasBackButton = hasBackButton;
                 HasCancelButton = hasCancelButton;
                 BackButtonChanged = backButtonChanged;
+                SearchBar = searchBar;
+
+                CurrentPath = new SelectorPath(null, null, false, null, true);
             }
         }
     }

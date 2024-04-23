@@ -1,4 +1,5 @@
 ﻿using FrooxEngine;
+using FrooxEngine.UIX;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,18 +15,16 @@ namespace ComponentSelectorAdditions
 
         public TextEditor Editor { get; }
 
-        public SelectorPath LastPath { get; set; }
-
         public Slot Search { get; }
 
+        public int SearchRefreshDelay { get; }
         public Text Text => (Text)Editor.Text.Target;
 
-        public SelectorData(Slot search, TextEditor editor)
+        public SelectorSearchBar(Slot search, TextEditor editor, int searchRefreshDelay)
         {
             Search = search;
             Editor = editor;
-
-            LastPath = new SelectorPath(null, false, null, true);
+            SearchRefreshDelay = searchRefreshDelay;
         }
 
         public CancellationToken UpdateSearch()

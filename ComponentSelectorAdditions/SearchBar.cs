@@ -20,16 +20,17 @@ using System.Globalization;
 namespace ComponentSelectorAdditions
 {
     internal sealed class SearchBar : ConfiguredResoniteMonkey<SearchBar, SearchConfig>, IEventHandler<BuildSelectorHeaderEvent>,
-        IEventHandler<EnumerateCategoriesEvent>, IEventHandler<EnumerateComponentsEvent>
+        ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>
     {
         private static readonly char[] _searchSplits = new[] { ' ', ',', '+', '|' };
-        private static readonly ConditionalWeakTable<ComponentSelector, SelectorData> _selectorData = new();
         public override bool CanBeDisabled => true;
         public int Priority => HarmonyLib.Priority.HigherThanNormal;
 
+        public bool SkipCanceled => true;
+
         public void Handle(BuildSelectorHeaderEvent eventData)
         {
-            if (!Enabled)
+            if (!Enabled || eventData.AddsSearchBar)
                 return;
 
             var ui = eventData.UI;
@@ -46,22 +47,15 @@ namespace ComponentSelectorAdditions
             ui.NestInto(content);
 
             var textField = ui.TextField(null, parseRTF: false);
-            var details = new SelectorData(searchPanel, textField.Editor.Target);
-            _selectorData.Add(eventData.Selector, details);
+            var details = new SelectorSearchBar(searchPanel, textField.Editor.Target, ConfigSection.SearchRefreshDelay);
+            eventData.SearchBar = details;
 
             details.Text.NullContent.AssignLocaleString($"{Mod.Id}.Search".AsLocaleKey());
             details.Editor.FinishHandling.Value = TextEditor.FinishAction.NullOnWhitespace;
-            details.Text.Content.OnValueChange += MakeBuildUICall(eventData.Selector, details);
 
             ui.NestInto(footer);
             ui.Style.ButtonTextAlignment = Alignment.MiddleCenter;
             ui.LocalActionButton("∅", _ => details.Text.Content.Value = null);
-
-            eventData.BackButtonChanged += (path, showBackButton) =>
-            {
-                searchPanel.ActiveSelf = !path.GenericType && !path.HasGroup;
-                details.LastPath = path;
-            };
 
             ui.NestInto(root);
             ui.PopStyle();
@@ -69,7 +63,7 @@ namespace ComponentSelectorAdditions
 
         public void Handle(EnumerateCategoriesEvent eventData)
         {
-            if (!eventData.Path.HasSearch || !_selectorData.TryGetValue(eventData.Selector, out var details)
+            if (!eventData.Path.HasSearch
                 || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
                 return;
 
@@ -83,8 +77,7 @@ namespace ComponentSelectorAdditions
 
         public void Handle(EnumerateComponentsEvent eventData)
         {
-            if (!eventData.Path.HasSearch || !_selectorData.TryGetValue(eventData.Selector, out var details)
-                || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
+            if (!eventData.Path.HasSearch || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
                 return;
 
             var search = eventData.Path.Search.Split(_searchSplits);
@@ -113,30 +106,6 @@ namespace ComponentSelectorAdditions
             Mod.RegisterEventHandler<EnumerateComponentsEvent>(this);
 
             return base.OnEngineReady();
-        }
-
-        private static SyncFieldEvent<string> MakeBuildUICall(ComponentSelector selector, SelectorData details)
-        {
-            return field =>
-            {
-                var token = details.UpdateSearch();
-
-                selector.StartTask(async () =>
-                {
-                    if (ConfigSection.SearchRefreshDelay > 0)
-                    {
-                        await default(ToBackground);
-                        await Task.Delay(ConfigSection.SearchRefreshDelay);
-                        await default(NextUpdate);
-                    }
-
-                    // Only refresh UI with search results if there was no further update immediately following it
-                    if (token.IsCancellationRequested || selector.IsDestroyed)
-                        return;
-
-                    selector.BuildUI($"{details.LastPath.Path}/{SelectorPath.SearchSegment}/{field.Value}", false);
-                });
-            };
         }
 
         private static IEnumerable<CategoryNode<Type>> SearchCategories(CategoryNode<Type> root, string[]? search = null)
@@ -177,34 +146,5 @@ namespace ComponentSelectorAdditions
                 .OrderByDescending(match => match.Matches)
                 .Select(match => new ComponentResult(match.Category, match.Type))
                 .Take(ConfigSection.MaxResultCount);
-
-        private sealed class SelectorData
-        {
-            private CancellationTokenSource _lastResultUpdate = new CancellationTokenSource();
-
-            public TextEditor Editor { get; }
-
-            public SelectorPath LastPath { get; set; }
-
-            public Slot Search { get; }
-
-            public Text Text => (Text)Editor.Text.Target;
-
-            public SelectorData(Slot search, TextEditor editor)
-            {
-                Search = search;
-                Editor = editor;
-
-                LastPath = new SelectorPath(null, false, null, true);
-            }
-
-            public CancellationToken UpdateSearch()
-            {
-                _lastResultUpdate.Cancel();
-                _lastResultUpdate = new CancellationTokenSource();
-
-                return _lastResultUpdate.Token;
-            }
-        }
     }
 }

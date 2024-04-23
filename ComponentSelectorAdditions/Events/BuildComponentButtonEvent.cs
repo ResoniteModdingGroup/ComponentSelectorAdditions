@@ -22,6 +22,7 @@ namespace ComponentSelectorAdditions.Events
         {
             Path = path;
             Component = component;
+            // need to set is direct category with element check
         }
     }
 }

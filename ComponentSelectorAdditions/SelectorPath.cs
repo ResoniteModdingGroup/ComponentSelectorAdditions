@@ -30,20 +30,15 @@ namespace ComponentSelectorAdditions
         public string[] PathSegments { get; }
         public string? Search { get; }
 
-        internal SelectorPath(string? rawPath, bool genericType, string? group, bool isSelectorRoot)
+        internal SelectorPath(string? rawPath, string? search, bool genericType, string? group, bool isSelectorRoot)
         {
+            Search = search;
             GenericType = genericType;
             Group = group;
             IsSelectorRoot = isSelectorRoot;
 
-            var pathSplit = rawPath?.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
-            PathSegments = pathSplit.TakeWhile(segment => !SearchSegment.Equals(segment, StringComparison.OrdinalIgnoreCase)).ToArray();
-
+            PathSegments = rawPath?.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToArray() ?? Array.Empty<string>();
             Path = $"/{PathSegments.Join(delimiter: "/")}";
-
-            // PathSegments ends before search, so +2 must be the search string
-            if (pathSplit.Length > PathSegments.Length + 1)
-                Search = pathSplit[PathSegments.Length + 1];
         }
     }
 }
