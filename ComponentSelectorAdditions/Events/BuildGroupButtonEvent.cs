@@ -17,7 +17,7 @@ namespace ComponentSelectorAdditions.Events
 
         /// <inheritdoc/>
         internal BuildGroupButtonEvent(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, ComponentResult groupComponent)
-            : base(selector, ui, rootCategory, groupComponent.Category)
+            : base(selector, ui, rootCategory, groupComponent.Category, groupComponent.Category == rootCategory)
         {
             Group = groupComponent.Group!;
             GroupName = groupComponent.GroupName!;

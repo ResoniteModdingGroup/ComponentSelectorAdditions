@@ -10,6 +10,7 @@ using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -183,7 +184,10 @@ namespace ComponentSelectorAdditions
             else if ((string.IsNullOrEmpty(path?.TrimStart('/')) || __instance._rootPath.Value == path?.TrimStart('/')) && group is null)
                 doNotGenerateBack = true;
 
-            var selectorPath = new SelectorPath(path, selectorData.SearchBar?.Text.Content, genericType, group, __instance._rootPath.Value == path);
+            if (selectorData.HasSearchBar)
+                selectorData.SearchBar.Active = !genericType && group is null;
+
+            var selectorPath = new SelectorPath(path, selectorData.SearchBar?.Content, genericType, group, __instance._rootPath.Value == path);
             selectorData.CurrentPath = selectorPath;
 
             OnSelectorBackButtonChanged(selectorData.BackButtonChanged, selectorPath, !doNotGenerateBack);
@@ -209,8 +213,29 @@ namespace ComponentSelectorAdditions
             return false;
         }
 
+        private static IEnumerable<string> EnumerateParents<T>(CategoryNode<T> start, CategoryNode<T>? end = null)
+        {
+            var current = start;
+
+            while (current is not null && current != end)
+            {
+                yield return current.Name;
+                current = current.Parent;
+            }
+        }
+
         private static string GetPrettyPath<T>(CategoryNode<T> category)
             => category.GetPath()[1..].Replace("/", " > ") + " >";
+
+        private static string? GetPrettyPath<T>(CategoryNode<T> subCategory, CategoryNode<T>? rootCategory = null, string delimiter = " > ")
+        {
+            var segments = EnumerateParents(subCategory, rootCategory);
+
+            if (!segments.Any())
+                return null;
+
+            return segments.Reverse().Join(delimiter: delimiter) + delimiter.TrimEnd();
+        }
 
         private static SyncFieldEvent<string> MakeBuildUICall(ComponentSelector selector, SelectorData details)
         {
@@ -236,6 +261,37 @@ namespace ComponentSelectorAdditions
             };
         }
 
+        private static void MakePermanentButton(UIBuilder ui, string? category, LocaleString name, colorX tint, ButtonEventHandler<string> callback, string argument)
+        {
+            ui.PushStyle();
+            ui.Style.MinHeight = category is not null ? 48 : 32;
+
+            var button = ui.Button(name, tint, callback, argument, .35f);
+
+            if (category is not null)
+            {
+                var buttonLabel = button.Label;
+                buttonLabel.ParseRichText.Value = false;
+                ui.NestInto(button.RectTransform);
+
+                var panel = ui.Panel();
+                panel.OffsetMin.Value = buttonLabel.RectTransform.OffsetMin;
+                panel.OffsetMax.Value = buttonLabel.RectTransform.OffsetMax;
+
+                ui.HorizontalHeader(18, out var header, out var content);
+
+                buttonLabel.Slot.Parent = content.Slot;
+                buttonLabel.RectTransform.OffsetMin.Value = new(16, 0);
+                buttonLabel.RectTransform.OffsetMax.Value = float2.Zero;
+
+                ui.NestInto(header);
+                var text = ui.Text(category, parseRTF: false);
+                text.Color.Value = RadiantUI_Constants.Neutrals.LIGHT;
+            }
+
+            ui.PopStyle();
+        }
+
         private static void OnBuildCategoryButton(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, CategoryNode<Type> subCategory)
         {
             var root = ui.Root;
@@ -253,9 +309,9 @@ namespace ComponentSelectorAdditions
             if (!eventData.Canceled)
             {
                 ui.Button(
-                eventData.IsDirectItem ? $"{subCategory.Name} >" : GetPrettyPath(subCategory),
-                RadiantUI_Constants.Sub.YELLOW, selector.OnOpenCategoryPressed, subCategory.GetPath(),
-                0.35f).Label.ParseRichText.Value = false;
+                    GetPrettyPath(subCategory, rootCategory),
+                    RadiantUI_Constants.Sub.YELLOW, selector.OnOpenCategoryPressed, subCategory.GetPath(),
+                    0.35f).Label.ParseRichText.Value = false;
             }
 
             ui.NestInto(root);
@@ -277,38 +333,12 @@ namespace ComponentSelectorAdditions
 
             if (!eventData.Canceled)
             {
-                ui.PushStyle();
-                ui.Style.MinHeight = eventData.IsDirectItem ? 32 : 48;
+                var category = GetPrettyPath(component.Category, rootCategory);
+                var tint = component.IsGeneric ? RadiantUI_Constants.Sub.GREEN : RadiantUI_Constants.Sub.CYAN;
+                ButtonEventHandler<string> callback = component.IsGeneric ? selector.OpenGenericTypesPressed : selector.OnAddComponentPressed;
+                var argument = $"{(component.IsGeneric ? $"{path.Path}/" : "")}{component.FullName}{(component.IsGeneric && path.HasGroup ? $"?{path.Group}" : "")}";
 
-                var name = component.NiceName;
-                var fullName = path.HasGroup ? $"{component.FullName}?{path.Group}" : component.FullName;
-
-                var button = component.IsGeneric ?
-                         ui.Button(name, RadiantUI_Constants.Sub.GREEN, selector.OpenGenericTypesPressed, path.Path + "/" + fullName, .35f)
-                         : ui.Button(name, RadiantUI_Constants.Sub.CYAN, selector.OnAddComponentPressed, component.FullName, .35f);
-
-                if (!eventData.IsDirectItem)
-                {
-                    var buttonLabel = button.Label;
-                    buttonLabel.ParseRichText.Value = false;
-                    ui.NestInto(button.RectTransform);
-
-                    var panel = ui.Panel();
-                    panel.OffsetMin.Value = buttonLabel.RectTransform.OffsetMin;
-                    panel.OffsetMax.Value = buttonLabel.RectTransform.OffsetMax;
-
-                    ui.HorizontalHeader(18, out var header, out var content);
-
-                    buttonLabel.Slot.Parent = content.Slot;
-                    buttonLabel.RectTransform.OffsetMin.Value = new(16, 0);
-                    buttonLabel.RectTransform.OffsetMax.Value = float2.Zero;
-
-                    ui.NestInto(header);
-                    var text = ui.Text(GetPrettyPath(component.Category), parseRTF: false);
-                    text.Color.Value = RadiantUI_Constants.Neutrals.LIGHT;
-                }
-
-                ui.PopStyle();
+                MakePermanentButton(ui, category, component.NiceName, tint, callback, argument);
             }
 
             ui.NestInto(root);
@@ -346,10 +376,11 @@ namespace ComponentSelectorAdditions
 
             if (!eventData.Canceled)
             {
-                ui.Button(
-                eventData.IsDirectItem ? groupComponent.GroupName : GetPrettyPath(groupComponent.Category) + groupComponent.GroupName,
-                RadiantUI_Constants.Sub.PURPLE, selector.OpenGroupPressed, $"{groupComponent.Category.GetPath()}:{groupComponent.Group}",
-                0.35f).Label.ParseRichText.Value = false;
+                var category = GetPrettyPath(groupComponent.Category, rootCategory);
+                var tint = RadiantUI_Constants.Sub.PURPLE;
+                var argument = $"{groupComponent.Category.GetPath()}:{groupComponent.Group}";
+
+                MakePermanentButton(ui, category, groupComponent.GroupName, tint, selector.OpenGroupPressed, argument);
             }
 
             ui.NestInto(root);

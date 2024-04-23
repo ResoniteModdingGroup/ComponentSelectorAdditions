@@ -11,16 +11,15 @@ namespace ComponentSelectorAdditions
     public sealed class SelectorPath
     {
         public const string SearchSegment = "Search";
-        private static readonly char[] _groupSeparators = { '?', ':' };
         private static readonly char[] _pathSeparators = { '/', '\\' };
         public bool GenericType { get; }
         public string? Group { get; }
 
         [MemberNotNullWhen(true, nameof(Group))]
-        public bool HasGroup => Group is not null;
+        public bool HasGroup => !string.IsNullOrWhiteSpace(Group);
 
         [MemberNotNullWhen(true, nameof(Search))]
-        public bool HasSearch => Search is not null;
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
 
         public bool IsRootCategory => PathSegments.Length == 0;
         public bool IsSelectorRoot { get; }

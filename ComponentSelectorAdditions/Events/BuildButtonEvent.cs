@@ -16,17 +16,16 @@ namespace ComponentSelectorAdditions.Events
         public bool Canceled { get; set; }
 
         public bool IsDirectItem { get; }
+        public CategoryNode<Type> ItemCategory { get; }
         public CategoryNode<Type> RootCategory { get; }
-
         public ComponentSelector Selector { get; }
-        public CategoryNode<Type> SubCategory { get; }
 
-        protected BuildButtonEvent(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, CategoryNode<Type> subCategory) : base(ui)
+        protected BuildButtonEvent(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, CategoryNode<Type> itemCategory, bool isDirectItem) : base(ui)
         {
             Selector = selector;
             RootCategory = rootCategory;
-            SubCategory = subCategory;
-            IsDirectItem = subCategory == rootCategory || subCategory.Parent == rootCategory;
+            ItemCategory = itemCategory;
+            IsDirectItem = isDirectItem;
         }
     }
 }

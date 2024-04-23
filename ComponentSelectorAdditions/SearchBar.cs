@@ -1,6 +1,5 @@
 ﻿using ComponentSelectorAdditions.Events;
 using Elements.Core;
-using FrooxEngine.UIX;
 using FrooxEngine;
 using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
@@ -11,9 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MonkeyLoader.Events;
-using System.Runtime.CompilerServices;
-using ComponentSelectorSearch;
-using MonkeyLoader.Configuration;
 using System.Threading;
 using System.Globalization;
 
@@ -34,37 +30,33 @@ namespace ComponentSelectorAdditions
                 return;
 
             var ui = eventData.UI;
-            var root = ui.Root;
 
             ui.PushStyle();
             ui.Style.MinHeight = 48;
+            ui.Style.MinWidth = 48;
 
-            var searchPanel = ui.Panel().Slot;
+            var searchLayout = ui.HorizontalLayout(8).Slot;
+            searchLayout.DestroyWhenLocalUserLeaves();
 
-            ui.VerticalFooter(56, out var footer, out var content);
-            footer.OffsetMin.Value += new float2(8, 0);
-
-            ui.NestInto(content);
-
+            ui.Style.FlexibleWidth = 1;
             var textField = ui.TextField(null, parseRTF: false);
-            var details = new SelectorSearchBar(searchPanel, textField.Editor.Target, ConfigSection.SearchRefreshDelay);
+            var details = new SelectorSearchBar(searchLayout, textField.Editor.Target, ConfigSection.SearchRefreshDelay);
             eventData.SearchBar = details;
 
             details.Text.NullContent.AssignLocaleString($"{Mod.Id}.Search".AsLocaleKey());
             details.Editor.FinishHandling.Value = TextEditor.FinishAction.NullOnWhitespace;
 
-            ui.NestInto(footer);
+            ui.Style.FlexibleWidth = -1;
             ui.Style.ButtonTextAlignment = Alignment.MiddleCenter;
-            ui.LocalActionButton("∅", _ => details.Text.Content.Value = null);
+            ui.LocalActionButton("∅", _ => details.Content = null);
 
-            ui.NestInto(root);
             ui.PopStyle();
+            ui.NestOut();
         }
 
         public void Handle(EnumerateCategoriesEvent eventData)
         {
-            if (!eventData.Path.HasSearch
-                || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
+            if (!eventData.Path.HasSearch || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
                 return;
 
             var search = eventData.Path.Search.Split(_searchSplits);
@@ -89,10 +81,14 @@ namespace ComponentSelectorAdditions
                         .Select(type => (Category: category, Type: type, Matches: SearchContains(type.Name, search)))))
                 .Where(match => match.Matches > 0)
                 .OrderBy(match => match.Type.Name)
-                .OrderByDescending(match => match.Matches);
+                .OrderByDescending(match => match.Matches)
+                .Select(match => (Component: new ComponentResult(match.Category, match.Type), Order: -match.Matches));
 
-            foreach (var result in results)
-                eventData.AddItem(new(result.Category, result.Type), result.Matches);
+            var remaining = ConfigSection.MaxResultCount;
+            var knownGroups = new HashSet<string>();
+
+            foreach (var result in results.TakeWhile(result => (!result.Component.HasGroup || knownGroups.Add(result.Component.Group) ? --remaining : remaining) >= 0))
+                eventData.AddItem(result.Component, result.Order);
 
             eventData.Canceled = true;
         }
@@ -133,18 +129,5 @@ namespace ComponentSelectorAdditions
 
         private static int SearchContains(string haystack, string[] needles)
             => needles.Count(needle => CultureInfo.InvariantCulture.CompareInfo.IndexOf(haystack, needle, CompareOptions.IgnoreCase) >= 0);
-
-        private static IEnumerable<ComponentResult> SearchTypes(CategoryNode<Type> root, string[] search)
-            => root.Elements
-                .Select(type => (Category: root, Type: type, Matches: SearchContains(type.Name, search)))
-                .Concat(
-                    SearchCategories(root)
-                    .SelectMany(category => category.Elements
-                        .Select(type => (Category: category, Type: type, Matches: SearchContains(type.Name, search)))))
-                .Where(match => match.Matches > 0)
-                .OrderBy(match => match.Type.Name)
-                .OrderByDescending(match => match.Matches)
-                .Select(match => new ComponentResult(match.Category, match.Type))
-                .Take(ConfigSection.MaxResultCount);
     }
 }

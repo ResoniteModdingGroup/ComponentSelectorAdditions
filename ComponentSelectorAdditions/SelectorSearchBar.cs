@@ -11,18 +11,29 @@ namespace ComponentSelectorAdditions
 {
     public sealed class SelectorSearchBar
     {
-        private CancellationTokenSource _lastResultUpdate = new CancellationTokenSource();
+        private CancellationTokenSource _lastResultUpdate = new();
+
+        public bool Active
+        {
+            get => Root.ActiveSelf;
+            set => Root.ActiveSelf = value;
+        }
+
+        public string? Content
+        {
+            get => Active ? Text.Content.Value : null;
+            set => Text.Content.Value = value;
+        }
 
         public TextEditor Editor { get; }
-
-        public Slot Search { get; }
+        public Slot Root { get; }
 
         public int SearchRefreshDelay { get; }
         public Text Text => (Text)Editor.Text.Target;
 
-        public SelectorSearchBar(Slot search, TextEditor editor, int searchRefreshDelay)
+        public SelectorSearchBar(Slot root, TextEditor editor, int searchRefreshDelay)
         {
-            Search = search;
+            Root = root;
             Editor = editor;
             SearchRefreshDelay = searchRefreshDelay;
         }

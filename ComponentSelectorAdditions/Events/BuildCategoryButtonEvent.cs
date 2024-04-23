@@ -13,8 +13,8 @@ namespace ComponentSelectorAdditions.Events
     public sealed class BuildCategoryButtonEvent : BuildButtonEvent
     {
         /// <inheritdoc/>
-        internal BuildCategoryButtonEvent(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, CategoryNode<Type> subCategory)
-            : base(selector, ui, rootCategory, subCategory)
+        internal BuildCategoryButtonEvent(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, CategoryNode<Type> itemCategory)
+            : base(selector, ui, rootCategory, itemCategory, itemCategory.Parent == rootCategory)
         { }
     }
 }

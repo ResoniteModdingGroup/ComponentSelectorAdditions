@@ -18,11 +18,10 @@ namespace ComponentSelectorAdditions.Events
 
         /// <inheritdoc/>
         internal BuildComponentButtonEvent(ComponentSelector selector, UIBuilder ui, SelectorPath path, CategoryNode<Type> rootCategory, ComponentResult component)
-            : base(selector, ui, rootCategory, component.Category)
+            : base(selector, ui, rootCategory, component.Category, component.Category == rootCategory)
         {
             Path = path;
             Component = component;
-            // need to set is direct category with element check
         }
     }
 }
