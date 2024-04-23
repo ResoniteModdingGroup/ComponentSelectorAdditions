@@ -13,6 +13,7 @@ namespace ComponentSelectorAdditions
         public const string SearchSegment = "Search";
         private static readonly char[] _groupSeparators = { '?', ':' };
         private static readonly char[] _pathSeparators = { '/', '\\' };
+        public bool GenericType { get; }
         public string? Group { get; }
 
         [MemberNotNullWhen(true, nameof(Group))]
@@ -23,14 +24,15 @@ namespace ComponentSelectorAdditions
 
         public bool IsRootCategory => PathSegments.Length == 0;
         public bool IsSelectorRoot { get; }
-        public string OpenParentCategoryPath => $"/{PathSegments.Take(PathSegments.Length - 1).Join(delimiter: "/")}{(HasGroup ? $"?{Group}" : "")}";
+        public string OpenParentCategoryPath => $"/{PathSegments.Take(PathSegments.Length - (GenericType || !HasGroup ? 1 : 0)).Join(delimiter: "/")}{(GenericType && HasGroup ? $"?{Group}" : "")}";
 
         public string Path { get; }
         public string[] PathSegments { get; }
         public string? Search { get; }
 
-        internal SelectorPath(string? rawPath, string? group, bool isSelectorRoot)
+        internal SelectorPath(string? rawPath, bool genericType, string? group, bool isSelectorRoot)
         {
+            GenericType = genericType;
             Group = group;
             IsSelectorRoot = isSelectorRoot;
 

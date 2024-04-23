@@ -10,13 +10,13 @@ namespace ComponentSelectorAdditions.Events
         public bool AddsBackButton { get; set; }
         public bool AddsCancelButton { get; set; }
         public ComponentSelector Selector { get; }
-        internal Action<bool>? ShowBackButtonChangedHandlers => ShowBackButtonChanged;
+        internal Action<SelectorPath, bool>? BackButtonChangedHandlers => BackButtonChanged;
 
         internal BuildSelectorEvent(ComponentSelector selector, UIBuilder ui) : base(ui)
         {
             Selector = selector;
         }
 
-        public event Action<bool>? ShowBackButtonChanged;
+        public event Action<SelectorPath, bool>? BackButtonChanged;
     }
 }

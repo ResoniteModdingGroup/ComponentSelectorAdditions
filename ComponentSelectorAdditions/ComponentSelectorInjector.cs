@@ -67,13 +67,13 @@ namespace ComponentSelectorAdditions
 
                 if (rootCategory is null)
                 {
-                    path = new SelectorPath(selector._rootPath, null, true);
+                    path = new SelectorPath(selector._rootPath, false, null, true);
                     rootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(path.Path);
 
                     if (rootCategory is null)
                     {
-                        selector._rootPath.Value = "/";
-                        path = new SelectorPath("/", null, true);
+                        selector._rootPath.Value = null;
+                        path = new SelectorPath("/", false, null, true);
                         rootCategory = WorkerInitializer.ComponentLibrary;
                     }
                 }
@@ -176,12 +176,12 @@ namespace ComponentSelectorAdditions
 
             if (doNotGenerateBack)
                 __instance._rootPath.Value = path;
-            else if (__instance._rootPath.Value == path && group is null)
+            else if ((string.IsNullOrEmpty(path?.TrimStart('/')) || __instance._rootPath.Value == path?.TrimStart('/')) && group is null)
                 doNotGenerateBack = true;
 
-            var selectorPath = new SelectorPath(path, group, __instance._rootPath.Value == path);
+            var selectorPath = new SelectorPath(path, genericType, group, __instance._rootPath.Value == path);
 
-            OnShowSelectorBackButtonChanged(__instance, selectorData.ShowBackButtonChanged, doNotGenerateBack);
+            OnSelectorBackButtonChanged(__instance, selectorData.BackButtonChanged, selectorPath, !doNotGenerateBack);
             doNotGenerateBack = selectorData.HasBackButton;
 
             __instance._uiRoot.Target.DestroyChildren();
@@ -319,7 +319,7 @@ namespace ComponentSelectorAdditions
             {
                 ui.Button(
                 eventData.IsDirectItem ? groupComponent.GroupName : GetPrettyPath(groupComponent.Category) + groupComponent.GroupName,
-                RadiantUI_Constants.Sub.PURPLE, selector.OnOpenCategoryPressed, $"{groupComponent.Category.GetPath()}:{groupComponent.Group}",
+                RadiantUI_Constants.Sub.PURPLE, selector.OpenGroupPressed, $"{groupComponent.Category.GetPath()}:{groupComponent.Group}",
                 0.35f).Label.ParseRichText.Value = false;
             }
 
@@ -405,11 +405,11 @@ namespace ComponentSelectorAdditions
             return eventData;
         }
 
-        private static void OnShowSelectorBackButtonChanged(ComponentSelector selector, Action<bool>? handlers, bool showBackButton)
+        private static void OnSelectorBackButtonChanged(ComponentSelector selector, Action<SelectorPath, bool>? handlers, SelectorPath path, bool showBackButton)
         {
             try
             {
-                handlers?.TryInvokeAll(showBackButton);
+                handlers?.TryInvokeAll(path, showBackButton);
             }
             catch (AggregateException ex)
             {
@@ -436,21 +436,22 @@ namespace ComponentSelectorAdditions
             SetupStyle(ui);
             ui.Style.ForceExpandHeight = false;
 
-            ui.VerticalLayout(8, 8);
+            var verticalLayout = ui.VerticalLayout(16, 8);
 
             var headerEventData = OnBuildHeader(__instance, ui);
 
             ui.Style.FlexibleHeight = 1;
             ui.ScrollArea();
-            ui.VerticalLayout(8f, 8f);
+            ui.VerticalLayout(8f);
             ui.FitContent(SizeFit.Disabled, SizeFit.MinSize);
             __instance._uiRoot.Target = ui.Root;
             ui.Style.FlexibleHeight = -1;
 
+            ui.NestInto(verticalLayout.RectTransform);
             var footerEventData = OnBuildFooter(__instance, ui, headerEventData.AddsBackButton, headerEventData.AddsCancelButton);
 
-            var showBackButtonChangedHandlers = headerEventData.ShowBackButtonChangedHandlers;
-            showBackButtonChangedHandlers += footerEventData.ShowBackButtonChangedHandlers;
+            var showBackButtonChangedHandlers = headerEventData.BackButtonChangedHandlers;
+            showBackButtonChangedHandlers += footerEventData.BackButtonChangedHandlers;
 
             _selectorData.Add(__instance, new SelectorData(
                 headerEventData.AddsBackButton || footerEventData.AddsBackButton,
@@ -514,15 +515,15 @@ namespace ComponentSelectorAdditions
 
         private sealed class SelectorData
         {
+            public Action<SelectorPath, bool>? BackButtonChanged { get; }
             public bool HasBackButton { get; }
             public bool HasCancelButton { get; }
-            public Action<bool>? ShowBackButtonChanged { get; }
 
-            public SelectorData(bool hasBackButton, bool hasCancelButton, Action<bool>? showBackButtonChanged)
+            public SelectorData(bool hasBackButton, bool hasCancelButton, Action<SelectorPath, bool>? backButtonChanged)
             {
                 HasBackButton = hasBackButton;
                 HasCancelButton = hasCancelButton;
-                ShowBackButtonChanged = showBackButtonChanged;
+                BackButtonChanged = backButtonChanged;
             }
         }
     }
