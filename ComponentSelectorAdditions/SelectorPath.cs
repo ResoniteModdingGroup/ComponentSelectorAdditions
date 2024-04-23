@@ -36,14 +36,14 @@ namespace ComponentSelectorAdditions
             Group = group;
             IsSelectorRoot = isSelectorRoot;
 
-            var pathSplit = rawPath?.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries);
-            PathSegments = pathSplit?.TakeWhile(segment => !SearchSegment.Equals(segment, StringComparison.OrdinalIgnoreCase)).ToArray() ?? Array.Empty<string>();
+            var pathSplit = rawPath?.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            PathSegments = pathSplit.TakeWhile(segment => !SearchSegment.Equals(segment, StringComparison.OrdinalIgnoreCase)).ToArray();
 
             Path = $"/{PathSegments.Join(delimiter: "/")}";
 
             // PathSegments ends before search, so +2 must be the search string
-            if (pathSplit is not null && pathSplit.Length > PathSegments.Length + 1)
-                Search = pathSplit[pathSplit.Length + 1];
+            if (pathSplit.Length > PathSegments.Length + 1)
+                Search = pathSplit[PathSegments.Length + 1];
         }
     }
 }

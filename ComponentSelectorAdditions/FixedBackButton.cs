@@ -16,9 +16,9 @@ namespace ComponentSelectorAdditions
     internal sealed class FixedBackButton : ResoniteEventHandlerMonkey<FixedBackButton, BuildSelectorHeaderEvent>
     {
         public override bool CanBeDisabled => true;
-        public override int Priority => HarmonyLib.Priority.VeryHigh;
+        public override int Priority => HarmonyLib.Priority.Normal;
 
-        protected override bool AppliesTo(BuildSelectorHeaderEvent eventData) => Enabled;
+        protected override bool AppliesTo(BuildSelectorHeaderEvent eventData) => Enabled && !eventData.AddsBackButton;
 
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
 

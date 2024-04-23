@@ -16,9 +16,9 @@ namespace ComponentSelectorAdditions
     internal sealed class FixedCancelButton : ResoniteEventHandlerMonkey<FixedCancelButton, BuildSelectorFooterEvent>
     {
         public override bool CanBeDisabled => true;
-        public override int Priority => HarmonyLib.Priority.VeryHigh;
+        public override int Priority => HarmonyLib.Priority.Normal;
 
-        protected override bool AppliesTo(BuildSelectorFooterEvent eventData) => Enabled;
+        protected override bool AppliesTo(BuildSelectorFooterEvent eventData) => Enabled && !eventData.AddsCancelButton;
 
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
 

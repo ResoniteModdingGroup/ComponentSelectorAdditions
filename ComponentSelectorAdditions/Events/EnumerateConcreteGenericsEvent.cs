@@ -1,4 +1,5 @@
-﻿using MonkeyLoader.Resonite.Events;
+﻿using FrooxEngine;
+using MonkeyLoader.Resonite.Events;
 using System;
 
 namespace ComponentSelectorAdditions.Events
@@ -11,8 +12,11 @@ namespace ComponentSelectorAdditions.Events
         /// </summary>
         public Type Component { get; }
 
-        public EnumerateConcreteGenericsEvent(Type component)
+        public ComponentSelector Selector { get; }
+
+        public EnumerateConcreteGenericsEvent(ComponentSelector selector, Type component)
         {
+            Selector = selector;
             Component = component;
         }
     }

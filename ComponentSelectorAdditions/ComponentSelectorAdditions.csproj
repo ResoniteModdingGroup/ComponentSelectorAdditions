@@ -43,6 +43,7 @@
   
   <ItemGroup>
     <Compile Remove="ComponentAttacherRecents.cs" />
+    <Compile Remove="ComponentSelectorSearch.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -62,5 +63,6 @@
 
   <ItemGroup>
     <None Include="ComponentAttacherRecents.cs" />
+    <None Include="ComponentSelectorSearch.cs" />
   </ItemGroup>
 </Project>

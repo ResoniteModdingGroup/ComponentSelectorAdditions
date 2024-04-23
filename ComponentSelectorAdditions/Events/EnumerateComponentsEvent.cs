@@ -25,10 +25,12 @@ namespace ComponentSelectorAdditions.Events
         public SelectorPath Path { get; }
 
         public CategoryNode<Type> RootCategory { get; }
+        public ComponentSelector Selector { get; }
 
         /// <inheritdoc/>
-        public EnumerateComponentsEvent(SelectorPath path, CategoryNode<Type> rootCategory, Predicate<Type> componentFilter)
+        public EnumerateComponentsEvent(ComponentSelector selector, SelectorPath path, CategoryNode<Type> rootCategory, Predicate<Type> componentFilter)
         {
+            Selector = selector;
             Path = path;
             RootCategory = rootCategory;
             ComponentFilter = componentFilter;

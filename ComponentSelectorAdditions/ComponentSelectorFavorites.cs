@@ -2,7 +2,6 @@ using Elements.Core;
 using FrooxEngine;
 using FrooxEngine.UIX;
 using HarmonyLib;
-using MonkeyLoader;
 using MonkeyLoader.Configuration;
 using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;

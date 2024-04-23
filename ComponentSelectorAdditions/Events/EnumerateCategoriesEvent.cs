@@ -19,10 +19,15 @@ namespace ComponentSelectorAdditions.Events
 
         public SelectorPath Path { get; }
 
+        public CategoryNode<Type> RootCategory { get; }
+        public ComponentSelector Selector { get; }
+
         /// <inheritdoc/>
-        public EnumerateCategoriesEvent(SelectorPath path)
+        public EnumerateCategoriesEvent(ComponentSelector selector, SelectorPath path, CategoryNode<Type> rootCategory)
         {
+            Selector = selector;
             Path = path;
+            RootCategory = rootCategory;
         }
     }
 }

@@ -85,14 +85,14 @@ namespace ComponentSelectorAdditions
                     selector.OnOpenCategoryPressed, path.OpenParentCategoryPath, 0.35f);
             }
 
-            var enumerateComponentsData = OnEnumerateComponents(path, rootCategory, selector.ComponentFilter.Target ?? Yes);
+            var enumerateComponentsData = OnEnumerateComponents(selector, path, rootCategory, selector.ComponentFilter.Target ?? Yes);
 
             KeyCounter<string>? groupCounter = null;
             HashSet<string>? groupNames = null;
 
             if (!path.HasGroup)
             {
-                var enumerateCategoriesData = OnEnumerateCategories(path, rootCategory);
+                var enumerateCategoriesData = OnEnumerateCategories(selector, path, rootCategory);
 
                 foreach (var category in enumerateCategoriesData.Items)
                     OnBuildCategoryButton(selector, ui, rootCategory, category);
@@ -146,7 +146,7 @@ namespace ComponentSelectorAdditions
             selector._customGenericTypeLabel.Target = button.Label.Content;
             selector._customGenericTypeColor.Target = button.BaseColor;
 
-            var concreteGenericsEventData = OnEnumerateConcreteGenerics(type);
+            var concreteGenericsEventData = OnEnumerateConcreteGenerics(selector, type);
 
             ui.Text("ComponentSelector.CustomGenericArguments".AsLocaleKey());
 
@@ -181,7 +181,7 @@ namespace ComponentSelectorAdditions
 
             var selectorPath = new SelectorPath(path, genericType, group, __instance._rootPath.Value == path);
 
-            OnSelectorBackButtonChanged(__instance, selectorData.BackButtonChanged, selectorPath, !doNotGenerateBack);
+            OnSelectorBackButtonChanged(selectorData.BackButtonChanged, selectorPath, !doNotGenerateBack);
             doNotGenerateBack = selectorData.HasBackButton;
 
             __instance._uiRoot.Target.DestroyChildren();
@@ -342,9 +342,9 @@ namespace ComponentSelectorAdditions
             return eventData;
         }
 
-        private static EnumerateCategoriesEvent OnEnumerateCategories(SelectorPath path, CategoryNode<Type> category)
+        private static EnumerateCategoriesEvent OnEnumerateCategories(ComponentSelector selector, SelectorPath path, CategoryNode<Type> rootCategory)
         {
-            var eventData = new EnumerateCategoriesEvent(path);
+            var eventData = new EnumerateCategoriesEvent(selector, path, rootCategory);
 
             try
             {
@@ -357,16 +357,16 @@ namespace ComponentSelectorAdditions
 
             if (!eventData.Canceled && !path.HasGroup)
             {
-                foreach (var subcategory in category.Subcategories)
+                foreach (var subcategory in rootCategory.Subcategories)
                     eventData.AddItem(subcategory);
             }
 
             return eventData;
         }
 
-        private static EnumerateComponentsEvent OnEnumerateComponents(SelectorPath path, CategoryNode<Type> category, Predicate<Type> componentFilter)
+        private static EnumerateComponentsEvent OnEnumerateComponents(ComponentSelector selector, SelectorPath path, CategoryNode<Type> category, Predicate<Type> componentFilter)
         {
-            var eventData = new EnumerateComponentsEvent(path, category, componentFilter);
+            var eventData = new EnumerateComponentsEvent(selector, path, category, componentFilter);
 
             try
             {
@@ -386,9 +386,9 @@ namespace ComponentSelectorAdditions
             return eventData;
         }
 
-        private static EnumerateConcreteGenericsEvent OnEnumerateConcreteGenerics(Type component)
+        private static EnumerateConcreteGenericsEvent OnEnumerateConcreteGenerics(ComponentSelector selector, Type component)
         {
-            var eventData = new EnumerateConcreteGenericsEvent(component);
+            var eventData = new EnumerateConcreteGenericsEvent(selector, component);
 
             try
             {
@@ -405,7 +405,7 @@ namespace ComponentSelectorAdditions
             return eventData;
         }
 
-        private static void OnSelectorBackButtonChanged(ComponentSelector selector, Action<SelectorPath, bool>? handlers, SelectorPath path, bool showBackButton)
+        private static void OnSelectorBackButtonChanged(Action<SelectorPath, bool>? handlers, SelectorPath path, bool showBackButton)
         {
             try
             {

@@ -2,6 +2,7 @@
 using FrooxEngine.UIX;
 using MonkeyLoader.Resonite.Events;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ComponentSelectorAdditions.Events
 {
@@ -9,6 +10,11 @@ namespace ComponentSelectorAdditions.Events
     {
         public bool AddsBackButton { get; set; }
         public bool AddsCancelButton { get; set; }
+
+        [MemberNotNullWhen(true, nameof(SearchBar))]
+        public bool AddsSearchBar => SearchBar is not null;
+
+        public SelectorSearchBar? SearchBar { get; set; }
         public ComponentSelector Selector { get; }
         internal Action<SelectorPath, bool>? BackButtonChangedHandlers => BackButtonChanged;
 
