@@ -7,14 +7,11 @@ using System.Linq;
 
 namespace ComponentSelectorAdditions.Events
 {
-    public sealed class EnumerateCategoriesEvent : SortedItemsEvent<CategoryNode<Type>>, ICancelableEvent
+    public sealed class EnumerateCategoriesEvent : CancelableSortedItemsEvent<CategoryNode<Type>>
     {
-        /// <inheritdoc/>
-        public bool Canceled { get; set; }
-
         public override IEnumerable<CategoryNode<Type>> Items
-            => sortableItems.OrderBy(entry => entry.Key.Name)
-                .OrderBy(entry => entry.Value)
+            => sortableItems.OrderBy(entry => entry.Value)
+                .ThenBy(entry => entry.Key.Name)
                 .Select(entry => entry.Key);
 
         public SelectorPath Path { get; }

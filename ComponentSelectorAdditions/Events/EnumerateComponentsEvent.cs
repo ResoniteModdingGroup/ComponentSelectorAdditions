@@ -8,18 +8,15 @@ using System.Linq;
 
 namespace ComponentSelectorAdditions.Events
 {
-    public sealed class EnumerateComponentsEvent : SortedItemsEvent<ComponentResult>, ICancelableEvent
+    public sealed class EnumerateComponentsEvent : CancelableSortedItemsEvent<ComponentResult>
     {
-        /// <inheritdoc/>
-        public bool Canceled { get; set; }
-
         public Predicate<Type> ComponentFilter { get; }
 
         public override IEnumerable<ComponentResult> Items
             => sortableItems
                 .Where(entry => ComponentFilter(entry.Key.Type))
-                .OrderBy(entry => entry.Key.GroupName ?? entry.Key.Type.Name)
                 .OrderBy(entry => entry.Value)
+                .ThenBy(entry => entry.Key.GroupName ?? entry.Key.Type.Name)
                 .Select(entry => entry.Key);
 
         public SelectorPath Path { get; }

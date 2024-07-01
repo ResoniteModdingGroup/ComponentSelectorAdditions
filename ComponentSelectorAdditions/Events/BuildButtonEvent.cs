@@ -10,11 +10,8 @@ using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions.Events
 {
-    public abstract class BuildButtonEvent : BuildUIEvent, ICancelableEvent
+    public abstract class BuildButtonEvent : CancelableBuildUIEvent
     {
-        /// <inheritdoc/>
-        public bool Canceled { get; set; }
-
         public bool IsDirectItem { get; }
         public CategoryNode<Type> ItemCategory { get; }
         public CategoryNode<Type> RootCategory { get; }

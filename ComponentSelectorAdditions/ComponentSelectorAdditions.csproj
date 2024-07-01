@@ -16,20 +16,8 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ResoniteModdingGroup/ComponentSelectorAdditions</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/ResoniteModdingGroup/ComponentSelectorAdditions.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <PackageTags>mod; mods; monkeyloader; resonite; component; attacher; protoflux; node; picker; search; favorites</PackageTags>
-    <IncludeSymbols>False</IncludeSymbols>
-    <EmbedAllSources>True</EmbedAllSources>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddSymbolsToPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
-
-  <Target Name="AddSymbolsToPackage">
-    <ItemGroup>
-      <TfmSpecificPackageFile Include="$(OutDir)$(AssemblyName).pdb" PackagePath="lib/$(TargetFramework)/" />
-    </ItemGroup>
-  </Target>
   
   <Target Name="CopyPackage" AfterTargets="Pack">
     <Copy Condition="'$(CopyToLibraries)'=='true'" SourceFiles="$(OutputPath)..\$(PackageId).$(PackageVersion).nupkg" DestinationFiles="$(ResonitePath)\MonkeyLoader\Mods\$(PackageId).nupkg" />
@@ -47,14 +35,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonkeyLoader" Version="0.15.1-beta" />
-    <PackageReference Include="MonkeyLoader.GamePacks.Resonite" Version="0.13.3-beta" />
+    <PackageReference Include="MonkeyLoader" Version="0.17.4-beta" />
+    <PackageReference Include="MonkeyLoader.GamePacks.Resonite" Version="0.16.4-beta" />
     <PackageReference Include="PolySharp" Version="1.14.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Resonite.Elements.Core" Version="1.0.2" />
-    <PackageReference Include="Resonite.FrooxEngine" Version="2024.4.17.1407" />
+    <PackageReference Include="Resonite.FrooxEngine" Version="2024.6.11.74" />
     <PackageReference Include="System.Text.Json" Version="8.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

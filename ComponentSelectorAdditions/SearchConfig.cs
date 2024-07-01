@@ -1,4 +1,7 @@
-﻿using MonkeyLoader.Configuration;
+﻿using Elements.Quantity;
+using FrooxEngine;
+using MonkeyLoader.Configuration;
+using MonkeyLoader.Resonite.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -14,8 +17,17 @@ namespace ComponentSelectorAdditions
     {
         private static readonly DefiningConfigKey<bool> _alwaysShowFullPathKey = new("AlwaysShowFullPath", "Whether to always show the full category path on component results, rather than only on hover.", () => true);
         private static readonly Dictionary<string, bool> _excludedCategories = new(StringComparer.OrdinalIgnoreCase);
-        private static readonly RangedDefiningConfigKey<int> _maxResultCountKey = new("MaxResultCount", "The maximum number of component results to display. Better results are listed first. Categories don't count.", () => 64, 1, 128);
-        private static readonly RangedDefiningConfigKey<int> _searchRefreshDelayKey = new("SearchRefreshDelay", "Time in ms to wait after search input change before refreshing the results. 0 to always refresh.", () => 750, 0, 2000);
+
+        private static readonly DefiningConfigKey<int> _maxResultCountKey = new("MaxResultCount", "The maximum number of component results to display. Better results are listed first. Categories don't count.", () => 64)
+        {
+            new ConfigKeyRange<int>(1, 128)
+        };
+
+        private static readonly DefiningConfigKey<int> _searchRefreshDelayKey = new("SearchRefreshDelay", "Time in ms to wait after search input change before refreshing the results. 0 to always refresh.", () => 750)
+        {
+            new ConfigKeyQuantity<int, Time>(new UnitConfiguration("ms", "0", " ", new [] {"s", "ms"}), null, 0, 2000)
+        };
+
         private static readonly DefiningConfigKey<string> _userExcludedCategoriesKey = new("UserExcludedCategories", "Exclude specific categories from being searched into by path (case sensitive). Separate entries by semicolon. Search will work when started inside them.", () => "/ProtoFlux");
         private static readonly char[] _userExclusionSeparator = new[] { ';' };
         public static SearchConfig Instance { get; private set; }
