@@ -1,6 +1,5 @@
 ﻿using FrooxEngine;
 using FrooxEngine.UIX;
-using MonkeyLoader.Events;
 using MonkeyLoader.Resonite.Events;
 using System;
 using System.Collections.Generic;

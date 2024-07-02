@@ -9,7 +9,7 @@ namespace ComponentSelectorAdditions
 {
     internal sealed class FavoritesConfig : ConfigSection
     {
-        private static readonly DefiningConfigKey<HashSet<string>> _categoriesKey = new("Categories", "Favorited Categories", () => new HashSet<string>() { "Data > Dynamic" }, true);
+        private static readonly DefiningConfigKey<HashSet<string>> _categoriesKey = new("Categories", "Favorited Categories", () => new HashSet<string>() { "/Data/Dynamic" }, true);
         private static readonly DefiningConfigKey<HashSet<string>> _componentsKey = new("Components", "Favorited Components", () => new HashSet<string>() { "FrooxEngine.ValueMultiDriver`1", "FrooxEngine.ReferenceMultiDriver`1" }, true);
         private static readonly DefiningConfigKey<HashSet<string>> _protoFluxCategoriesKey = new("ProtoFluxCategories", "Favorited ProtoFlux Categories", () => new HashSet<string>() { }, true);
         private static readonly DefiningConfigKey<HashSet<string>> _protoFluxNodesKey = new("ProtoFluxNodes", "Favorited ProtoFlux Nodes", () => new HashSet<string>() { }, true);
@@ -18,7 +18,7 @@ namespace ComponentSelectorAdditions
         public HashSet<string> Components => _componentsKey.GetValue()!;
 
         public override string Description => "Contains the favorited categories and components.";
-        public override string Id => "Favorites";
+        public override string Id => "FavoritesConfig";
 
         public HashSet<string> ProtoFluxCategories => _protoFluxCategoriesKey.GetValue()!;
 

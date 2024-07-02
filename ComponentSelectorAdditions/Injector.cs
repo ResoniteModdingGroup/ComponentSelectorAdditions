@@ -4,13 +4,11 @@ using FrooxEngine;
 using FrooxEngine.UIX;
 using HarmonyLib;
 using MonkeyLoader;
-using MonkeyLoader.Configuration;
 using MonkeyLoader.Events;
 using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -21,15 +19,16 @@ using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {
+    [HarmonyPatchCategory(nameof(Injector))]
     [HarmonyPatch(typeof(ComponentSelector))]
-    [HarmonyPatchCategory(nameof(ComponentSelectorInjector))]
-    internal sealed class ComponentSelectorInjector : ResoniteMonkey<ComponentSelectorInjector>,
+    internal sealed class Injector : ResoniteMonkey<Injector>,
         IEventSource<BuildSelectorHeaderEvent>, IEventSource<BuildSelectorFooterEvent>,
         ICancelableEventSource<EnumerateCategoriesEvent>, ICancelableEventSource<EnumerateComponentsEvent>,
         ICancelableEventSource<BuildCategoryButtonEvent>, ICancelableEventSource<BuildGroupButtonEvent>, ICancelableEventSource<BuildComponentButtonEvent>,
-        IEventSource<EnumerateConcreteGenericsEvent>
+        IEventSource<EnumerateConcreteGenericsEvent>, IEventSource<PostProcessButtonsEvent>
     {
         private static readonly ConditionalWeakTable<ComponentSelector, SelectorData> _selectorData = new();
+
         private static CancelableEventDispatching<BuildCategoryButtonEvent>? _buildCategoryButton;
         private static CancelableEventDispatching<BuildComponentButtonEvent>? _buildComponentButton;
         private static EventDispatching<BuildSelectorFooterEvent>? _buildFooter;
@@ -38,6 +37,7 @@ namespace ComponentSelectorAdditions
         private static CancelableEventDispatching<EnumerateCategoriesEvent>? _enumerateCategories;
         private static CancelableEventDispatching<EnumerateComponentsEvent>? _enumerateComponents;
         private static EventDispatching<EnumerateConcreteGenericsEvent>? _enumerateConcreteGenerics;
+        private static EventDispatching<PostProcessButtonsEvent>? _postProcessButtons;
 
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
 
@@ -54,12 +54,37 @@ namespace ComponentSelectorAdditions
             Mod.RegisterEventSource<BuildGroupButtonEvent>(this);
             Mod.RegisterEventSource<BuildComponentButtonEvent>(this);
 
+            Mod.RegisterEventSource<PostProcessButtonsEvent>(this);
+
             return base.OnEngineReady();
         }
 
-        private static void BuildCategoryUI(ComponentSelector selector, UIBuilder ui, SelectorData selectorData, bool doNotGenerateBack)
+        protected override bool OnShutdown(bool applicationExiting)
         {
+            if (!applicationExiting)
+            {
+                Mod.UnregisterEventSource<BuildSelectorHeaderEvent>(this);
+                Mod.UnregisterEventSource<BuildSelectorFooterEvent>(this);
+
+                Mod.UnregisterEventSource<EnumerateCategoriesEvent>(this);
+                Mod.UnregisterEventSource<EnumerateComponentsEvent>(this);
+                Mod.UnregisterEventSource<EnumerateConcreteGenericsEvent>(this);
+
+                Mod.UnregisterEventSource<BuildCategoryButtonEvent>(this);
+                Mod.UnregisterEventSource<BuildGroupButtonEvent>(this);
+                Mod.UnregisterEventSource<BuildComponentButtonEvent>(this);
+
+                Mod.UnregisterEventSource<PostProcessButtonsEvent>(this);
+            }
+
+            return base.OnShutdown(applicationExiting);
+        }
+
+        private static void BuildCategoryUI(ComponentSelector selector, UIBuilder ui, SelectorData selectorData, bool doNotGenerateBack, out Button? backButton)
+        {
+            backButton = null;
             CategoryNode<Type> rootCategory;
+
             if (selectorData.CurrentPath.IsRootCategory)
             {
                 rootCategory = WorkerInitializer.ComponentLibrary;
@@ -86,7 +111,7 @@ namespace ComponentSelectorAdditions
 
             if (rootCategory != WorkerInitializer.ComponentLibrary && !doNotGenerateBack)
             {
-                ui.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR,
+                backButton = ui.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR,
                     selector.OnOpenCategoryPressed, path.OpenParentCategoryPath, 0.35f);
             }
 
@@ -126,13 +151,15 @@ namespace ComponentSelectorAdditions
             }
         }
 
-        private static void BuildGenericTypeUI(ComponentSelector selector, UIBuilder ui, SelectorPath path, bool doNotGenerateBack)
+        private static void BuildGenericTypeUI(ComponentSelector selector, UIBuilder ui, SelectorPath path, bool doNotGenerateBack, out Button? backButton, out Button? customGenericButton)
         {
+            backButton = null;
+
             var type = WorkerManager.GetType(PathUtility.GetFileName(path.PathSegments[^1]));
             selector._genericType.Value = type;
 
             if (!doNotGenerateBack)
-                ui.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR, selector.OnOpenCategoryPressed, path.OpenParentCategoryPath, 0.35f);
+                backButton = ui.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR, selector.OnOpenCategoryPressed, path.OpenParentCategoryPath, 0.35f);
 
             ui.Text("ComponentSelector.CustomGenericArguments".AsLocaleKey());
 
@@ -147,9 +174,9 @@ namespace ComponentSelectorAdditions
                 selector._customGenericArguments.Add(textField);
             }
 
-            var button = ui.Button((LocaleString)string.Empty, RadiantUI_Constants.BUTTON_COLOR, selector.OnCreateCustomType, .35f);
-            selector._customGenericTypeLabel.Target = button.Label.Content;
-            selector._customGenericTypeColor.Target = button.BaseColor;
+            customGenericButton = ui.Button((LocaleString)string.Empty, RadiantUI_Constants.BUTTON_COLOR, selector.OnCreateCustomType, .35f);
+            selector._customGenericTypeLabel.Target = customGenericButton.Label.Content;
+            selector._customGenericTypeColor.Target = customGenericButton.BaseColor;
 
             var concreteGenericsEventData = OnEnumerateConcreteGenerics(selector, type);
 
@@ -167,7 +194,7 @@ namespace ComponentSelectorAdditions
                 }
                 catch (Exception ex)
                 {
-                    UniLog.Warning("Exception checking validity of a generic type: " + concreteType?.ToString() + "for " + type?.ToString() + "\n" + ex);
+                    UniLog.Warning(ex.Format("Exception checking validity of a generic type: " + concreteType?.ToString() + " for " + type?.ToString()));
                 }
             }
         }
@@ -187,7 +214,7 @@ namespace ComponentSelectorAdditions
             if (selectorData.HasSearchBar)
                 selectorData.SearchBar.Active = !genericType && group is null;
 
-            var selectorPath = new SelectorPath(path, selectorData.SearchBar?.Content, genericType, group, __instance._rootPath.Value == path);
+            var selectorPath = new SelectorPath(path, selectorData.SearchBar?.Content, genericType, group, doNotGenerateBack);
             selectorData.CurrentPath = selectorPath;
 
             OnSelectorBackButtonChanged(selectorData.BackButtonChanged, selectorPath, !doNotGenerateBack);
@@ -199,16 +226,26 @@ namespace ComponentSelectorAdditions
 
             var ui = SetupStyle(new UIBuilder(__instance._uiRoot.Target));
 
+            Button? backButton;
+            Button? customGenericButton = null;
+            Button? cancelButton = null;
+
             if (genericType)
             {
-                BuildGenericTypeUI(__instance, ui, selectorPath, doNotGenerateBack);
-                return false;
+                BuildGenericTypeUI(__instance, ui, selectorPath, doNotGenerateBack, out backButton, out customGenericButton);
+            }
+            else
+            {
+                BuildCategoryUI(__instance, ui, selectorData, doNotGenerateBack, out backButton);
+
+                if (!selectorData.HasCancelButton)
+                {
+                    cancelButton = ui.Button("General.Cancel".AsLocaleKey(), RadiantUI_Constants.Sub.RED, __instance.OnCancelPressed, 0.35f);
+                    cancelButton.Slot.OrderOffset = 1000000L;
+                }
             }
 
-            BuildCategoryUI(__instance, ui, selectorData, doNotGenerateBack);
-
-            if (!selectorData.HasCancelButton)
-                ui.Button("General.Cancel".AsLocaleKey(), RadiantUI_Constants.Sub.RED, __instance.OnCancelPressed, 0.35f).Slot.OrderOffset = 1000000L;
+            OnPostProcessButtons(__instance, selectorData.CurrentPath, ui, backButton, customGenericButton, cancelButton);
 
             return false;
         }
@@ -219,7 +256,7 @@ namespace ComponentSelectorAdditions
 
             while (current is not null && current != end)
             {
-                yield return current.Name;
+                yield return current.Parent is null ? "" : current.Name;
                 current = current.Parent;
             }
         }
@@ -297,14 +334,7 @@ namespace ComponentSelectorAdditions
             var root = ui.Root;
             var eventData = new BuildCategoryButtonEvent(selector, ui, rootCategory, subCategory);
 
-            try
-            {
-                _buildCategoryButton?.TryInvokeAll(eventData);
-            }
-            catch (AggregateException ex)
-            {
-                Logger.Warn(() => ex.Format("Some Build Category Button Event handlers threw an exception:"));
-            }
+            _buildCategoryButton?.Invoke(eventData);
 
             if (!eventData.Canceled)
             {
@@ -322,14 +352,7 @@ namespace ComponentSelectorAdditions
             var root = ui.Root;
             var eventData = new BuildComponentButtonEvent(selector, ui, path, rootCategory, component);
 
-            try
-            {
-                _buildComponentButton?.TryInvokeAll(eventData);
-            }
-            catch (AggregateException ex)
-            {
-                Logger.Warn(() => ex.Format("Some Build Component Button Event handlers threw an exception:"));
-            }
+            _buildComponentButton?.Invoke(eventData);
 
             if (!eventData.Canceled)
             {
@@ -348,14 +371,7 @@ namespace ComponentSelectorAdditions
         {
             var eventData = new BuildSelectorFooterEvent(selector, ui, searchBar, hasBackButton, hasCancelButton);
 
-            try
-            {
-                _buildFooter?.TryInvokeAll(eventData);
-            }
-            catch (AggregateException ex)
-            {
-                Logger.Warn(() => ex.Format("Some Build Selector Footer Event handlers threw an exception:"));
-            }
+            _buildFooter?.Invoke(eventData);
 
             return eventData;
         }
@@ -365,14 +381,7 @@ namespace ComponentSelectorAdditions
             var root = ui.Root;
             var eventData = new BuildGroupButtonEvent(selector, ui, rootCategory, groupComponent);
 
-            try
-            {
-                _buildGroupButton?.TryInvokeAll(eventData);
-            }
-            catch (AggregateException ex)
-            {
-                Logger.Warn(() => ex.Format("Some Build Group Button Event handlers threw an exception:"));
-            }
+            _buildGroupButton?.Invoke(eventData);
 
             if (!eventData.Canceled)
             {
@@ -390,14 +399,7 @@ namespace ComponentSelectorAdditions
         {
             var eventData = new BuildSelectorHeaderEvent(selector, ui);
 
-            try
-            {
-                _buildHeader?.TryInvokeAll(eventData);
-            }
-            catch (AggregateException ex)
-            {
-                Logger.Warn(() => ex.Format("Some Build Selector Header Event handlers threw an exception:"));
-            }
+            _buildHeader?.Invoke(eventData);
 
             return eventData;
         }
@@ -406,14 +408,7 @@ namespace ComponentSelectorAdditions
         {
             var eventData = new EnumerateCategoriesEvent(selector, path, rootCategory);
 
-            try
-            {
-                _enumerateCategories?.TryInvokeAll(eventData);
-            }
-            catch (AggregateException ex)
-            {
-                Logger.Warn(() => ex.Format("Some Enumerate Categories Event handlers threw an exception:"));
-            }
+            _enumerateCategories?.Invoke(eventData);
 
             if (!eventData.Canceled && !path.HasGroup)
             {
@@ -428,14 +423,7 @@ namespace ComponentSelectorAdditions
         {
             var eventData = new EnumerateComponentsEvent(selector, path, category, componentFilter);
 
-            try
-            {
-                _enumerateComponents?.TryInvokeAll(eventData);
-            }
-            catch (AggregateException ex)
-            {
-                Logger.Warn(() => ex.Format("Some Enumerate Components Event handlers threw an exception:"));
-            }
+            _enumerateComponents?.Invoke(eventData);
 
             if (!eventData.Canceled)
             {
@@ -450,19 +438,28 @@ namespace ComponentSelectorAdditions
         {
             var eventData = new EnumerateConcreteGenericsEvent(selector, component);
 
-            try
-            {
-                _enumerateConcreteGenerics?.TryInvokeAll(eventData);
-            }
-            catch (AggregateException ex)
-            {
-                Logger.Warn(() => ex.Format("Some Enumerate Concrete Generics Event handlers threw an exception:"));
-            }
+            _enumerateConcreteGenerics?.Invoke(eventData);
 
             foreach (var concreteGeneric in WorkerInitializer.GetCommonGenericTypes(component))
                 eventData.AddItem(concreteGeneric);
 
             return eventData;
+        }
+
+        private static void OnPostProcessButtons(ComponentSelector selector, SelectorPath path,
+            UIBuilder ui, Button? backButton, Button? customGenericButton, Button? cancelButton)
+        {
+            // Lock in UI Order through the Offsets
+            var index = 0;
+            foreach (var child in selector._uiRoot.Target.Children.ToArray())
+                child.OrderOffset = 10 * index++;
+
+            var root = ui.Root;
+            var eventData = new PostProcessButtonsEvent(selector, path, ui, backButton, customGenericButton, cancelButton);
+
+            _postProcessButtons?.Invoke(eventData);
+
+            ui.NestInto(root);
         }
 
         private static void OnSelectorBackButtonChanged(Action<SelectorPath, bool>? handlers, SelectorPath path, bool showBackButton)
@@ -577,6 +574,12 @@ namespace ComponentSelectorAdditions
         {
             add => _buildCategoryButton += value;
             remove => _buildCategoryButton -= value;
+        }
+
+        event EventDispatching<PostProcessButtonsEvent>? IEventSource<PostProcessButtonsEvent>.Dispatching
+        {
+            add => _postProcessButtons += value;
+            remove => _postProcessButtons -= value;
         }
 
         private sealed class SelectorData

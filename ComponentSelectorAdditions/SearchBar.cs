@@ -43,7 +43,7 @@ namespace ComponentSelectorAdditions
             var details = new SelectorSearchBar(searchLayout, textField.Editor.Target, ConfigSection.SearchRefreshDelay);
             eventData.SearchBar = details;
 
-            details.Text.NullContent.AssignLocaleString($"{Mod.Id}.Search".AsLocaleKey());
+            details.Text.NullContent.AssignLocaleString(Mod.GetLocaleString("Search"));
             details.Editor.FinishHandling.Value = TextEditor.FinishAction.NullOnWhitespace;
 
             ui.Style.FlexibleWidth = -1;
@@ -59,7 +59,7 @@ namespace ComponentSelectorAdditions
             if (!eventData.Path.HasSearch || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
                 return;
 
-            var search = eventData.Path.Search.Split(_searchSplits);
+            var search = eventData.Path.Search.Split(_searchSplits, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var category in SearchCategories(eventData.RootCategory, search))
                 eventData.AddItem(category);
@@ -72,7 +72,7 @@ namespace ComponentSelectorAdditions
             if (!eventData.Path.HasSearch || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
                 return;
 
-            var search = eventData.Path.Search.Split(_searchSplits);
+            var search = eventData.Path.Search.Split(_searchSplits, StringSplitOptions.RemoveEmptyEntries);
             var results = eventData.RootCategory.Elements
                 .Select(type => (Category: eventData.RootCategory, Type: type, Matches: SearchContains(type.Name, search)))
                 .Concat(
@@ -80,8 +80,8 @@ namespace ComponentSelectorAdditions
                     .SelectMany(category => category.Elements
                         .Select(type => (Category: category, Type: type, Matches: SearchContains(type.Name, search)))))
                 .Where(match => match.Matches > 0)
-                .OrderBy(match => match.Type.Name)
                 .OrderByDescending(match => match.Matches)
+                .ThenBy(match => match.Type.Name)
                 .Select(match => (Component: new ComponentResult(match.Category, match.Type), Order: -match.Matches));
 
             var remaining = ConfigSection.MaxResultCount;
@@ -102,6 +102,18 @@ namespace ComponentSelectorAdditions
             Mod.RegisterEventHandler<EnumerateComponentsEvent>(this);
 
             return base.OnEngineReady();
+        }
+
+        protected override bool OnShutdown(bool applicationExiting)
+        {
+            if (!applicationExiting)
+            {
+                Mod.UnregisterEventHandler<BuildSelectorHeaderEvent>(this);
+                Mod.UnregisterEventHandler<EnumerateCategoriesEvent>(this);
+                Mod.UnregisterEventHandler<EnumerateComponentsEvent>(this);
+            }
+
+            return base.OnShutdown(applicationExiting);
         }
 
         private static IEnumerable<CategoryNode<Type>> SearchCategories(CategoryNode<Type> root, string[]? search = null)

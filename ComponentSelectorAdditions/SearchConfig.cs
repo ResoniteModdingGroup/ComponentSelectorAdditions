@@ -43,6 +43,14 @@ namespace ComponentSelectorAdditions
             _userExcludedCategoriesKey.Changed += UserExcludedCategoriesChanged;
         }
 
+        public SearchConfig()
+        {
+            if (Instance is not null)
+                throw new InvalidOperationException();
+
+            Instance = this;
+        }
+
         public bool AddExcludedCategory(string category)
         {
             if (string.IsNullOrWhiteSpace(category))
