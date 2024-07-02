@@ -24,6 +24,9 @@ namespace ComponentSelectorAdditions
 
         protected override void Handle(BuildSelectorHeaderEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             var button = eventData.UI.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR, eventData.Selector.OnOpenCategoryPressed, "/", 0.35f);
             var relay = button.Slot.GetComponent<ButtonRelay<string>>();
 

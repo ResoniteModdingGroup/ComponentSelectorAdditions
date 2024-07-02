@@ -2,6 +2,27 @@
   "localeCode": "de",
   "authors": [ "Banane9" ],
   "messages": {
-    "ComponentSelectorAdditions.Search": "<i>Suchen ...</i>"
+    "ComponentSelectorAdditions.Description": "Dieser MonkeyLoader Mod für Resonite strukturiert Komponenten-Selektoren und ProtoFlux Nodebrowser neu und fügt eine Suchfunktion sowie Kategorien für zuletzt genutzte und favorisierte Komponenten / Nodes hinzu.",
+
+    "ComponentSelectorAdditions.Search": "<i>Suchen ...</i>",
+
+    "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Fügt eine Anzeige für den Pfad der aktuellen Kategorie (und des generischen Typs) zu Komponenten-Selektoren hinzu.",
+    "ComponentSelectorAdditions.FavoritesCategories.Description": "Fügt 'Favorites' Kategorien zu den Wurzelkategorien von Komponenten-Selektoren und ProtoFlux Nodebrowsern hinzu und macht Kategorien und Komponenten / Nodes favorisierbar.",
+    "ComponentSelectorAdditions.FixedBackButton.Description": "Platziert den 'Zurück' Knopf bei Komponent-Selektoren außerhalb des scrollbaren Bereichs.",
+    "ComponentSelectorAdditions.FixedCancelButton.Description": "Platziert den 'Abbrechen' Knopf bei Komponent-Selektoren außerhalb des scrollbaren Bereichs.",
+    "ComponentSelectorAdditions.Injector.Description": "Macht die Komponenten-Selektor-Generation und -Auflistung modular indem sie durch Events ausgeführt werden.",
+    "ComponentSelectorAdditions.RecentsCategories.Description": "Fügt 'Recents' Kategorien zu den Wurzelkategorien von Komponenten-Selektoren und ProtoFlux Nodebrowsern hinzu, welche die zuletzt Genutzten auflisten.",
+    "ComponentSelectorAdditions.SearchBar.Description": "Fügt eine Suchleiste zu Komponenten-Selektoren hinzu, welche es erlaubt Komponenten und ProtoFlux Nodes zu suchen.",
+
+    "ComponentSelectorAdditions.Favorites.SortFavoriteCategoriesToTop.Description": "Sortiert favorisierte Kategorien über unfavorisierten.",
+    "ComponentSelectorAdditions.Favorites.SortFavoriteComponentsToTop.Description": "Sortiert favorisierte Komponenten / Nodes über unfavorisierten.",
+
+    "ComponentSelectorAdditions.Recents.TrackedCapacity.Description": "Wie viele zuletzt genutzte Komponenten / Nodes gespeichert und angezeigt werden sollen.",
+    "ComponentSelectorAdditions.Recents.TrackConcreteComponents.Description": "Ob die konkreten Versionen von generischen Komponenten gespeichert werden sollen.",
+    "ComponentSelectorAdditions.Recents.TrackGenericComponents.Description": "Ob die generischen Versionen von generischen Komponenten gespeichert werden sollen.",
+
+    "ComponentSelectorAdditions.Search.MaxResultCount.Description": "Die maximale Anzahl von Komponenten- / Node-Ergebnissen die angezeigt werden soll. 'Bessere' Ergebnisse werden zuerst angezeigt. Kategorien zählen nicht.",
+    "ComponentSelectorAdditions.Search.SearchRefreshDelay.Description": "Wie lange nach einer Änderung der Suchanfrage gewartet wird bevor die Ergebnisse erneuert werden. 0 um immer sofort neu zu suchen.",
+    "ComponentSelectorAdditions.Search.UserExcludedCategories.Description": "Schließt bestimmte Kategorien basierend auf ihrem Pfad (Groß- / Kleinschreibung beachten) davon aus in sie hinein zu suchen. Einträge mit einem Semikolon trennen. Die Suche innerhalb der Kategorien funktioniert trotzdem."
   }
 }

@@ -24,6 +24,9 @@ namespace ComponentSelectorAdditions
 
         protected override void Handle(BuildSelectorFooterEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             eventData.UI.Button("General.Cancel".AsLocaleKey(), RadiantUI_Constants.Sub.RED, eventData.Selector.OnCancelPressed, 0.35f).Slot.OrderOffset = 1000000;
 
             eventData.AddsCancelButton = true;

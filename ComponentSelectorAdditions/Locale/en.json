@@ -2,6 +2,14 @@
   "localeCode": "en",
   "authors": [ "Banane9" ],
   "messages": {
-    "ComponentSelectorAdditions.Search": "<i>Search ...</i>"
+    "ComponentSelectorAdditions.Search": "<i>Search ...</i>",
+
+    "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Adds an indicator for the current category (and generic Type) path to component attachers.",
+    "ComponentSelectorAdditions.FavoritesCategories.Description": "Adds 'Favorites' categories to component attachers and ProtoFlux node selector roots and makes categories and components / nodes favoritable.",
+    "ComponentSelectorAdditions.FixedBackButton.Description": "Places the 'Back' button on component attachers outside of the scrollable area.",
+    "ComponentSelectorAdditions.FixedCancelButton.Description": "Places the 'Cancel' button on component attachers outside of the scrollable area.",
+    "ComponentSelectorAdditions.Injector.Description": "Makes the component selector generation and listing modular by handling it through events.",
+    "ComponentSelectorAdditions.RecentsCategories.Description": "Adds 'Recents' categories to the component attacher and ProtoFlux node browser roots which display the latest used ones.",
+    "ComponentSelectorAdditions.SearchBar.Description": "Adds a searchbar to component selectors which allows searching components or ProtoFlux nodes."
   }
 }

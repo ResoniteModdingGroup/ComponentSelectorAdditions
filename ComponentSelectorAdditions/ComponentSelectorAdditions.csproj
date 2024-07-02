@@ -28,10 +28,6 @@
     <None Include="..\README.md" Pack="true" PackagePath="" />
     <None Include="Locale\*" Pack="true" PackagePath="content/Locale/" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Remove="ComponentAttacherRecents.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MonkeyLoader" Version="0.17.4-beta" />
@@ -46,9 +42,5 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="ComponentAttacherRecents.cs" />
   </ItemGroup>
 </Project>

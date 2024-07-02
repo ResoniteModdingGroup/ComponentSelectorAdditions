@@ -33,5 +33,12 @@ namespace ComponentSelectorAdditions
             Group = type.GetCustomAttribute<GroupingAttribute>()?.GroupName;
             GroupName = Group?.Split('.').Last();
         }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+            => obj is ComponentResult otherResult && otherResult.Type == Type;
+
+        /// <inheritdoc/>
+        public override int GetHashCode() => Type.GetHashCode();
     }
 }

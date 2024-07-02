@@ -1,6 +1,5 @@
 ﻿using FrooxEngine;
 using FrooxEngine.UIX;
-using MonkeyLoader.Resonite.Events;
 
 namespace ComponentSelectorAdditions.Events
 {

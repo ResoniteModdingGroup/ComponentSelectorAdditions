@@ -10,11 +10,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace ComponentSelectorAdditions
 {
-    internal sealed class Favorites : ConfiguredResoniteMonkey<Favorites, FavoritesConfig>,
+    internal sealed class FavoritesCategories : ConfiguredResoniteMonkey<FavoritesCategories, FavoritesConfig>,
         ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>,
         IEventHandler<PostProcessButtonsEvent>
     {
@@ -26,7 +25,6 @@ namespace ComponentSelectorAdditions
         private CategoryNode<Type> _protoFluxFavoritesCategory = null!;
         private CategoryNode<Type> _protoFluxRootCategory = null!;
         private CategoryNode<Type> _rootCategory = null!;
-        public override bool CanBeDisabled => true;
 
         public int Priority => HarmonyLib.Priority.Normal;
 
@@ -35,12 +33,28 @@ namespace ComponentSelectorAdditions
         public void Handle(EnumerateComponentsEvent eventData)
         {
             if (eventData.RootCategory != _favoritesCategory && eventData.RootCategory != _protoFluxFavoritesCategory)
+            {
+                if (ConfigSection.SortFavoriteComponentsToTop)
+                {
+                    foreach (var element in eventData.RootCategory.Elements)
+                    {
+                        var name = element.FullName;
+
+                        if (ConfigSection.Components.Contains(name) || ConfigSection.ProtoFluxNodes.Contains(name))
+                            eventData.AddItem(new ComponentResult(eventData.RootCategory, element), -1000, true);
+                    }
+                }
+
                 return;
+            }
 
-            var favoriteElements = eventData.RootCategory == _favoritesCategory ? ConfigSection.Components : ConfigSection.ProtoFluxNodes;
+            var favoriteElements = (eventData.RootCategory == _favoritesCategory ? ConfigSection.Components : ConfigSection.ProtoFluxNodes)
+                .Select(typeName => WorkerManager.ParseNiceType(typeName))
+                .Where(type => type is not null)
+                .Select(type => (Type: type, Category: WorkerInitializer.ComponentLibrary.GetSubcategory(WorkerInitializer.GetInitInfo(type).CategoryPath)));
 
-            foreach (var typeName in favoriteElements)
-                eventData.AddItem(new ComponentResult(eventData.RootCategory, WorkerManager.GetType(typeName)));
+            foreach (var element in favoriteElements)
+                eventData.AddItem(new ComponentResult(element.Category, element.Type));
 
             eventData.Canceled = true;
         }
@@ -58,7 +72,20 @@ namespace ComponentSelectorAdditions
             }
 
             if (eventData.RootCategory != _favoritesCategory && eventData.RootCategory != _protoFluxFavoritesCategory)
+            {
+                if (ConfigSection.SortFavoriteCategoriesToTop)
+                {
+                    foreach (var category in eventData.RootCategory.Subcategories)
+                    {
+                        var path = category.GetPath();
+
+                        if (ConfigSection.Categories.Contains(path) || ConfigSection.ProtoFluxCategories.Contains(path))
+                            eventData.AddItem(category, -1000, true);
+                    }
+                }
+
                 return;
+            }
 
             var favoriteCategories = eventData.RootCategory == _favoritesCategory ?
                 ConfigSection.Categories : ConfigSection.ProtoFluxCategories;
@@ -96,7 +123,10 @@ namespace ComponentSelectorAdditions
         protected override bool OnEngineReady()
         {
             _favoritesCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(FavoritesPath);
+            SearchConfig.Instance.AddExcludedCategory(FavoritesPath);
+
             _protoFluxFavoritesCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxFavoritesPath);
+            SearchConfig.Instance.AddExcludedCategory(ProtoFluxFavoritesPath);
 
             _rootCategory = WorkerInitializer.ComponentLibrary;
             _protoFluxRootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxPath);
@@ -115,6 +145,12 @@ namespace ComponentSelectorAdditions
                 Mod.UnregisterEventHandler<EnumerateCategoriesEvent>(this);
                 Mod.UnregisterEventHandler<EnumerateComponentsEvent>(this);
                 Mod.UnregisterEventHandler<PostProcessButtonsEvent>(this);
+
+                _rootCategory._subcategories.Remove("Favorites");
+                SearchConfig.Instance.RemoveExcludedCategory(FavoritesPath);
+
+                _protoFluxRootCategory._subcategories.Remove("Favorites");
+                SearchConfig.Instance.RemoveExcludedCategory(ProtoFluxFavoritesPath);
             }
 
             return base.OnShutdown(applicationExiting);

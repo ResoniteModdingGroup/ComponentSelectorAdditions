@@ -39,6 +39,8 @@ namespace ComponentSelectorAdditions
         private static EventDispatching<EnumerateConcreteGenericsEvent>? _enumerateConcreteGenerics;
         private static EventDispatching<PostProcessButtonsEvent>? _postProcessButtons;
 
+        public override bool CanBeDisabled => true;
+
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
 
         protected override bool OnEngineReady()
@@ -203,7 +205,7 @@ namespace ComponentSelectorAdditions
         [HarmonyPatch(nameof(ComponentSelector.BuildUI))]
         private static bool BuildUIPrefix(ComponentSelector __instance, string path, bool genericType, string group, bool doNotGenerateBack)
         {
-            if (!_selectorData.TryGetValue(__instance, out var selectorData))
+            if (!Enabled || !_selectorData.TryGetValue(__instance, out var selectorData))
                 return true;
 
             if (doNotGenerateBack)
@@ -260,9 +262,6 @@ namespace ComponentSelectorAdditions
                 current = current.Parent;
             }
         }
-
-        private static string GetPrettyPath<T>(CategoryNode<T> category)
-            => category.GetPath()[1..].Replace("/", " > ") + " >";
 
         private static string? GetPrettyPath<T>(CategoryNode<T> subCategory, CategoryNode<T>? rootCategory = null, string delimiter = " > ")
         {
