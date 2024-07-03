@@ -9,6 +9,7 @@ namespace ComponentSelectorAdditions
 {
     internal sealed class RecentsConfig : ConfigSection
     {
+        private static readonly DefiningConfigKey<bool> _addRecentConcreteComponentsToSelection = new("AddRecentConcreteComponentsToSelection", "Ensure that recent concrete versions of generic Components / Nodes appear in the selection.", () => true);
         private static readonly DefiningConfigKey<List<string>> _componentsKey = new("RecentComponents", "Recent Components", () => new List<string>() { "FrooxEngine.ValueMultiDriver`1", "FrooxEngine.ReferenceMultiDriver`1" }, true);
         private static readonly DefiningConfigKey<List<string>> _protoFluxNodesKey = new("RecentProtoFluxNodes", "Recent ProtoFlux Nodes", () => new List<string>() { }, true);
 
@@ -17,11 +18,11 @@ namespace ComponentSelectorAdditions
             new ConfigKeyRange<int>(1, 128)
         };
 
-        private static readonly DefiningConfigKey<bool> _trackConcreteComponentsKey = new("TrackConcreteComponents", "Whether the concrete version of a recent generic component gets saved.", () => true);
-        private static readonly DefiningConfigKey<bool> _trackGenericComponentsKey = new("TrackGenericComponents", "Whether the generic version of a recent component gets saved.", () => true);
+        private static readonly DefiningConfigKey<bool> _trackConcreteComponentsKey = new("TrackConcreteComponents", "Whether the concrete version of a recent generic Component / Node gets saved.", () => true);
+        private static readonly DefiningConfigKey<bool> _trackGenericComponentsKey = new("TrackGenericComponents", "Whether the generic version of a recent Component / Node gets saved.", () => true);
 
+        public bool AddRecentConcreteComponentsToSelection => _addRecentConcreteComponentsToSelection.GetValue();
         public List<string> Components => _componentsKey.GetValue()!;
-
         public override string Description => "Contains the recent components.";
         public override string Id => "Recents";
 
