@@ -26,6 +26,6 @@ namespace ComponentSelectorAdditions
         public bool SortFavoriteCategoriesToTop => _sortFavoriteCategoriesToTop.GetValue();
         public bool SortFavoriteComponentsToTop => _sortFavoriteComponentsToTop.GetValue();
         public bool SortFavoriteConcreteGenericsToTop => _sortFavoriteConcreteGenericsToTop.GetValue();
-        public override Version Version { get; } = new(1, 0, 0);
+        public override Version Version { get; } = new(1, 1, 0);
     }
 }

@@ -31,6 +31,6 @@ namespace ComponentSelectorAdditions
         public int RecentCap => _recentCapKey.GetValue();
         public bool TrackConcreteComponents => _trackConcreteComponentsKey.GetValue();
         public bool TrackGenericComponents => _trackGenericComponentsKey.GetValue();
-        public override Version Version { get; } = new(1, 0, 0);
+        public override Version Version { get; } = new(1, 1, 0);
     }
 }
