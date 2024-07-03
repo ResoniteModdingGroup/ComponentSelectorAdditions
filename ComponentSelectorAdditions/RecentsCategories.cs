@@ -16,10 +16,11 @@ using System.Xml.Linq;
 
 namespace ComponentSelectorAdditions
 {
-    [HarmonyPatchCategory(nameof(RecentsCategories))]
     [HarmonyPatch(typeof(ComponentSelector))]
+    [HarmonyPatchCategory(nameof(RecentsCategories))]
     internal sealed class RecentsCategories : ConfiguredResoniteMonkey<RecentsCategories, RecentsConfig>,
-        ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>
+        ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>,
+        IEventHandler<EnumerateConcreteGenericsEvent>
     {
         private const string ProtoFluxPath = "/ProtoFlux/Runtimes/Execution/Nodes";
         private const string ProtoFluxRecentsPath = "/ProtoFlux/Runtimes/Execution/Nodes/Recents";
@@ -58,6 +59,18 @@ namespace ComponentSelectorAdditions
                 eventData.AddItem(_protoFluxRecentsCategory, -1000, true);
         }
 
+        public void Handle(EnumerateConcreteGenericsEvent eventData)
+        {
+            var concreteGenerics = ConfigSection.Components
+                .Concat(ConfigSection.ProtoFluxNodes)
+                .Where(typeName => typeName.Contains('`')) // Simple filter check as the presence of this indicates a generic type
+                .Select(typeName => WorkerManager.ParseNiceType(typeName))
+                .Where(type => type is not null && type.IsGenericType && !type.ContainsGenericParameters && type.GetGenericTypeDefinition() == eventData.Component);
+
+            foreach (var concreteGeneric in concreteGenerics)
+                eventData.AddItem(concreteGeneric);
+        }
+
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
 
         protected override bool OnEngineReady()
@@ -73,6 +86,7 @@ namespace ComponentSelectorAdditions
 
             Mod.RegisterEventHandler<EnumerateCategoriesEvent>(this);
             Mod.RegisterEventHandler<EnumerateComponentsEvent>(this);
+            Mod.RegisterEventHandler<EnumerateConcreteGenericsEvent>(this);
 
             return base.OnEngineReady();
         }
@@ -83,6 +97,7 @@ namespace ComponentSelectorAdditions
             {
                 Mod.UnregisterEventHandler<EnumerateCategoriesEvent>(this);
                 Mod.UnregisterEventHandler<EnumerateComponentsEvent>(this);
+                Mod.UnregisterEventHandler<EnumerateConcreteGenericsEvent>(this);
 
                 _rootCategory._subcategories.Remove("Recents");
                 SearchConfig.Instance.RemoveExcludedCategory(RecentsPath);

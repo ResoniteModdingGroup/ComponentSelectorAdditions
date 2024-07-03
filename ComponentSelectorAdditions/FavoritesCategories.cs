@@ -15,6 +15,7 @@ namespace ComponentSelectorAdditions
 {
     internal sealed class FavoritesCategories : ConfiguredResoniteMonkey<FavoritesCategories, FavoritesConfig>,
         ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>,
+        IEventHandler<EnumerateConcreteGenericsEvent>,
         IEventHandler<PostProcessButtonsEvent>
     {
         private const string FavoritesPath = "/Favorites";
@@ -61,11 +62,11 @@ namespace ComponentSelectorAdditions
 
         public void Handle(EnumerateCategoriesEvent eventData)
         {
-            if (eventData.Path.IsSelectorRoot)
+            if (eventData.RootCategory == _rootCategory || eventData.RootCategory == _protoFluxRootCategory)
             {
                 if (eventData.RootCategory == _rootCategory)
                     eventData.AddItem(_favoritesCategory, -1000, true);
-                else if (eventData.RootCategory == _protoFluxRootCategory)
+                else
                     eventData.AddItem(_protoFluxFavoritesCategory, -1000, true);
 
                 return;
@@ -118,6 +119,18 @@ namespace ComponentSelectorAdditions
             }
         }
 
+        public void Handle(EnumerateConcreteGenericsEvent eventData)
+        {
+            var concreteGenerics = ConfigSection.Components
+                .Concat(ConfigSection.ProtoFluxNodes)
+                .Where(typeName => typeName.Contains('`')) // Simple filter check as the presence of this indicates a generic type
+                .Select(typeName => WorkerManager.ParseNiceType(typeName))
+                .Where(type => type is not null && type.IsGenericType && !type.ContainsGenericParameters && type.GetGenericTypeDefinition() == eventData.Component);
+
+            foreach (var concreteGeneric in concreteGenerics)
+                eventData.AddItem(concreteGeneric, ConfigSection.SortFavoriteConcreteGenericsToTop ? -100 : 0, ConfigSection.SortFavoriteConcreteGenericsToTop);
+        }
+
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
 
         protected override bool OnEngineReady()
@@ -133,6 +146,7 @@ namespace ComponentSelectorAdditions
 
             Mod.RegisterEventHandler<EnumerateCategoriesEvent>(this);
             Mod.RegisterEventHandler<EnumerateComponentsEvent>(this);
+            Mod.RegisterEventHandler<EnumerateConcreteGenericsEvent>(this);
             Mod.RegisterEventHandler<PostProcessButtonsEvent>(this);
 
             return base.OnEngineReady();
@@ -144,6 +158,7 @@ namespace ComponentSelectorAdditions
             {
                 Mod.UnregisterEventHandler<EnumerateCategoriesEvent>(this);
                 Mod.UnregisterEventHandler<EnumerateComponentsEvent>(this);
+                Mod.UnregisterEventHandler<EnumerateConcreteGenericsEvent>(this);
                 Mod.UnregisterEventHandler<PostProcessButtonsEvent>(this);
 
                 _rootCategory._subcategories.Remove("Favorites");

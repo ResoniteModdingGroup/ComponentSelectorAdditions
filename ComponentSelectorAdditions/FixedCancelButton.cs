@@ -1,7 +1,6 @@
 ﻿using ComponentSelectorAdditions.Events;
 using Elements.Core;
 using FrooxEngine;
-using FrooxEngine.UIX;
 using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
 using System;
