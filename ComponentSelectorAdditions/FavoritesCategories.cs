@@ -39,9 +39,7 @@ namespace ComponentSelectorAdditions
                 {
                     foreach (var element in eventData.RootCategory.Elements)
                     {
-                        var name = element.FullName;
-
-                        if (ConfigSection.Components.Contains(name) || ConfigSection.ProtoFluxNodes.Contains(name))
+                        if (ConfigSection.Components.Contains(element) || ConfigSection.ProtoFluxNodes.Contains(element))
                             eventData.AddItem(new ComponentResult(eventData.RootCategory, element), -1000, true);
                     }
                 }
@@ -50,7 +48,6 @@ namespace ComponentSelectorAdditions
             }
 
             var favoriteElements = (eventData.RootCategory == _favoritesCategory ? ConfigSection.Components : ConfigSection.ProtoFluxNodes)
-                .Select(typeName => WorkerManager.ParseNiceType(typeName))
                 .Where(type => type is not null)
                 .Select(type => (Type: type, Category: WorkerInitializer.ComponentLibrary.GetSubcategory(WorkerInitializer.GetInitInfo(type).CategoryPath)));
 
@@ -123,8 +120,6 @@ namespace ComponentSelectorAdditions
         {
             var concreteGenerics = ConfigSection.Components
                 .Concat(ConfigSection.ProtoFluxNodes)
-                .Where(typeName => typeName.Contains('`')) // Simple filter check as the presence of this indicates a generic type
-                .Select(typeName => WorkerManager.ParseNiceType(typeName))
                 .Where(type => type is not null && type.IsGenericType && !type.ContainsGenericParameters && type.GetGenericTypeDefinition() == eventData.Component);
 
             foreach (var concreteGeneric in concreteGenerics)
@@ -222,10 +217,10 @@ namespace ComponentSelectorAdditions
             => ConfigSection.Categories.Contains(name);
 
         private bool IsFavoriteComponent(string name)
-            => ConfigSection.Components.Contains(name);
+            => ConfigSection.Components.Contains(WorkerManager.ParseNiceType(name));
 
         private bool IsFavoriteProtoFluxNode(string name)
-            => ConfigSection.ProtoFluxNodes.Contains(name);
+            => ConfigSection.ProtoFluxNodes.Contains(WorkerManager.ParseNiceType(name));
 
         private bool IsProtoFluxFavoriteCategory(string name)
             => ConfigSection.ProtoFluxCategories.Contains(name);
@@ -234,10 +229,10 @@ namespace ComponentSelectorAdditions
             => ToggleHashSetContains(ConfigSection.Categories, name);
 
         private bool ToggleFavoriteComponent(string name)
-            => ToggleHashSetContains(ConfigSection.Components, name);
+            => ToggleHashSetContains(ConfigSection.Components, WorkerManager.ParseNiceType(name));
 
         private bool ToggleFavoriteProtoFluxNode(string name)
-            => ToggleHashSetContains(ConfigSection.ProtoFluxNodes, name);
+            => ToggleHashSetContains(ConfigSection.ProtoFluxNodes, WorkerManager.ParseNiceType(name));
 
         private bool ToggleProtoFluxFavoriteCategory(string name)
             => ToggleHashSetContains(ConfigSection.ProtoFluxCategories, name);

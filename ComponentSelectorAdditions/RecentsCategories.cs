@@ -2,7 +2,6 @@
 using Elements.Core;
 using FrooxEngine;
 using FrooxEngine.ProtoFlux;
-using FrooxEngine.UIX;
 using HarmonyLib;
 using MonkeyLoader.Events;
 using MonkeyLoader.Patching;
@@ -41,7 +40,6 @@ namespace ComponentSelectorAdditions
                 return;
 
             var recentElements = (eventData.RootCategory == _recentsCategory ? ConfigSection.Components : ConfigSection.ProtoFluxNodes)
-                .Select(typeName => WorkerManager.ParseNiceType(typeName))
                 .Where(type => type is not null)
                 .Select(type => (Type: type, Category: WorkerInitializer.ComponentLibrary.GetSubcategory(WorkerInitializer.GetInitInfo(type).CategoryPath)));
 
@@ -63,8 +61,6 @@ namespace ComponentSelectorAdditions
         {
             var concreteGenerics = ConfigSection.Components
                 .Concat(ConfigSection.ProtoFluxNodes)
-                .Where(typeName => typeName.Contains('`')) // Simple filter check as the presence of this indicates a generic type
-                .Select(typeName => WorkerManager.ParseNiceType(typeName))
                 .Where(type => type is not null && type.IsGenericType && !type.ContainsGenericParameters && type.GetGenericTypeDefinition() == eventData.Component);
 
             foreach (var concreteGeneric in concreteGenerics)
@@ -109,6 +105,12 @@ namespace ComponentSelectorAdditions
             return base.OnShutdown(applicationExiting);
         }
 
+        private static void AddRecent(List<Type> recents, Type type)
+        {
+            recents.RemoveAll(recentType => recentType == type);
+            recents.Add(type);
+        }
+
         [HarmonyPostfix]
         [HarmonyPatch(nameof(ComponentSelector.OnAddComponentPressed))]
         private static void OnAddComponentPressedPostfix(ComponentSelector __instance, string typename)
@@ -143,22 +145,13 @@ namespace ComponentSelectorAdditions
                 UpdateRecents(ConfigSection.Components, type);
         }
 
-        private static bool ToggleHashSetContains<T>(ISet<T> set, T value)
-        {
-            if (set.Add(value))
-                return true;
-
-            set.Remove(value);
-            return false;
-        }
-
-        private static void UpdateRecents(List<string> recents, Type type)
+        private static void UpdateRecents(List<Type> recents, Type type)
         {
             if (type.IsGenericType && ConfigSection.TrackGenericComponents)
-                recents.Add(type.GetGenericTypeDefinition().FullName);
+                AddRecent(recents, type.GetGenericTypeDefinition());
 
             if (!type.IsGenericType || ConfigSection.TrackConcreteComponents)
-                recents.Add(type.FullName);
+                AddRecent(recents, type);
 
             if (recents.Count > ConfigSection.RecentCap)
                 recents.RemoveRange(0, recents.Count - ConfigSection.RecentCap);
