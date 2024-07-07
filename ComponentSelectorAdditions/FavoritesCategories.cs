@@ -27,12 +27,16 @@ namespace ComponentSelectorAdditions
         private CategoryNode<Type> _protoFluxRootCategory = null!;
         private CategoryNode<Type> _rootCategory = null!;
 
+        public override bool CanBeDisabled => true;
         public int Priority => HarmonyLib.Priority.Normal;
 
         public bool SkipCanceled => true;
 
         public void Handle(EnumerateComponentsEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             if (eventData.RootCategory != _favoritesCategory && eventData.RootCategory != _protoFluxFavoritesCategory)
             {
                 if (ConfigSection.SortFavoriteComponentsToTop)
@@ -59,6 +63,9 @@ namespace ComponentSelectorAdditions
 
         public void Handle(EnumerateCategoriesEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             if (eventData.RootCategory == _rootCategory || eventData.RootCategory == _protoFluxRootCategory)
             {
                 if (eventData.RootCategory == _rootCategory)
@@ -96,6 +103,9 @@ namespace ComponentSelectorAdditions
 
         public void Handle(PostProcessButtonsEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             if (eventData.Path.IsSelectorRoot)
                 return;
 
@@ -118,6 +128,9 @@ namespace ComponentSelectorAdditions
 
         public void Handle(EnumerateConcreteGenericsEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             var concreteGenerics = ConfigSection.Components
                 .Concat(ConfigSection.ProtoFluxNodes)
                 .Where(type => type is not null && type.IsGenericType && !type.ContainsGenericParameters && type.GetGenericTypeDefinition() == eventData.Component);
@@ -128,13 +141,13 @@ namespace ComponentSelectorAdditions
 
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
 
+        protected override void OnDisabled() => RemoveCategories();
+
+        protected override void OnEnabled() => AddCategories();
+
         protected override bool OnEngineReady()
         {
-            _favoritesCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(FavoritesPath);
-            SearchConfig.Instance.AddExcludedCategory(FavoritesPath);
-
-            _protoFluxFavoritesCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxFavoritesPath);
-            SearchConfig.Instance.AddExcludedCategory(ProtoFluxFavoritesPath);
+            AddCategories();
 
             _rootCategory = WorkerInitializer.ComponentLibrary;
             _protoFluxRootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxPath);
@@ -156,11 +169,7 @@ namespace ComponentSelectorAdditions
                 Mod.UnregisterEventHandler<EnumerateConcreteGenericsEvent>(this);
                 Mod.UnregisterEventHandler<PostProcessButtonsEvent>(this);
 
-                _rootCategory._subcategories.Remove("Favorites");
-                SearchConfig.Instance.RemoveExcludedCategory(FavoritesPath);
-
-                _protoFluxRootCategory._subcategories.Remove("Favorites");
-                SearchConfig.Instance.RemoveExcludedCategory(ProtoFluxFavoritesPath);
+                RemoveCategories();
             }
 
             return base.OnShutdown(applicationExiting);
@@ -213,6 +222,15 @@ namespace ComponentSelectorAdditions
             return false;
         }
 
+        private void AddCategories()
+        {
+            _favoritesCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(FavoritesPath);
+            SearchConfig.Instance.AddExcludedCategory(FavoritesPath);
+
+            _protoFluxFavoritesCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxFavoritesPath);
+            SearchConfig.Instance.AddExcludedCategory(ProtoFluxFavoritesPath);
+        }
+
         private bool IsFavoriteCategory(string name)
             => ConfigSection.Categories.Contains(name);
 
@@ -224,6 +242,15 @@ namespace ComponentSelectorAdditions
 
         private bool IsProtoFluxFavoriteCategory(string name)
             => ConfigSection.ProtoFluxCategories.Contains(name);
+
+        private void RemoveCategories()
+        {
+            _rootCategory._subcategories.Remove("Favorites");
+            SearchConfig.Instance.RemoveExcludedCategory(FavoritesPath);
+
+            _protoFluxRootCategory._subcategories.Remove("Favorites");
+            SearchConfig.Instance.RemoveExcludedCategory(ProtoFluxFavoritesPath);
+        }
 
         private bool ToggleFavoriteCategory(string name)
             => ToggleHashSetContains(ConfigSection.Categories, name);
