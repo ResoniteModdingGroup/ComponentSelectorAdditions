@@ -30,12 +30,17 @@ namespace ComponentSelectorAdditions
         private CategoryNode<Type> _recentsCategory = null!;
         private CategoryNode<Type> _rootCategory = null!;
 
+        public override bool CanBeDisabled => true;
+
         public int Priority => HarmonyLib.Priority.Normal;
 
         public bool SkipCanceled => true;
 
         public void Handle(EnumerateComponentsEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             if (eventData.RootCategory != _recentsCategory && eventData.RootCategory != _protoFluxRecentsCategory)
                 return;
 
@@ -51,6 +56,9 @@ namespace ComponentSelectorAdditions
 
         public void Handle(EnumerateCategoriesEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             if (eventData.RootCategory == _rootCategory)
                 eventData.AddItem(_recentsCategory, -1000, true);
             else if (eventData.RootCategory == _protoFluxRootCategory)
@@ -59,6 +67,9 @@ namespace ComponentSelectorAdditions
 
         public void Handle(EnumerateConcreteGenericsEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             var concreteGenerics = ConfigSection.Components
                 .Concat(ConfigSection.ProtoFluxNodes)
                 .Where(type => type is not null && type.IsGenericType && !type.ContainsGenericParameters && type.GetGenericTypeDefinition() == eventData.Component);
@@ -69,13 +80,13 @@ namespace ComponentSelectorAdditions
 
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
 
+        protected override void OnDisabled() => RemoveCategories();
+
+        protected override void OnEnabled() => AddCategories();
+
         protected override bool OnEngineReady()
         {
-            _recentsCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(RecentsPath);
-            SearchConfig.Instance.AddExcludedCategory(RecentsPath);
-
-            _protoFluxRecentsCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxRecentsPath);
-            SearchConfig.Instance.AddExcludedCategory(ProtoFluxRecentsPath);
+            AddCategories();
 
             _rootCategory = WorkerInitializer.ComponentLibrary;
             _protoFluxRootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxPath);
@@ -95,11 +106,7 @@ namespace ComponentSelectorAdditions
                 Mod.UnregisterEventHandler<EnumerateComponentsEvent>(this);
                 Mod.UnregisterEventHandler<EnumerateConcreteGenericsEvent>(this);
 
-                _rootCategory._subcategories.Remove("Recents");
-                SearchConfig.Instance.RemoveExcludedCategory(RecentsPath);
-
-                _protoFluxRootCategory._subcategories.Remove("Recents");
-                SearchConfig.Instance.RemoveExcludedCategory(ProtoFluxRecentsPath);
+                RemoveCategories();
             }
 
             return base.OnShutdown(applicationExiting);
@@ -155,6 +162,24 @@ namespace ComponentSelectorAdditions
 
             if (recents.Count > ConfigSection.RecentCap)
                 recents.RemoveRange(0, recents.Count - ConfigSection.RecentCap);
+        }
+
+        private void AddCategories()
+        {
+            _recentsCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(RecentsPath);
+            SearchConfig.Instance.AddExcludedCategory(RecentsPath);
+
+            _protoFluxRecentsCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxRecentsPath);
+            SearchConfig.Instance.AddExcludedCategory(ProtoFluxRecentsPath);
+        }
+
+        private void RemoveCategories()
+        {
+            _rootCategory._subcategories.Remove("Recents");
+            SearchConfig.Instance.RemoveExcludedCategory(RecentsPath);
+
+            _protoFluxRootCategory._subcategories.Remove("Recents");
+            SearchConfig.Instance.RemoveExcludedCategory(ProtoFluxRecentsPath);
         }
     }
 }
