@@ -13,6 +13,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,12 +26,14 @@ namespace ComponentSelectorAdditions
         IEventSource<BuildSelectorHeaderEvent>, IEventSource<BuildSelectorFooterEvent>,
         ICancelableEventSource<EnumerateCategoriesEvent>, ICancelableEventSource<EnumerateComponentsEvent>,
         ICancelableEventSource<BuildCategoryButtonEvent>, ICancelableEventSource<BuildGroupButtonEvent>, ICancelableEventSource<BuildComponentButtonEvent>,
-        IEventSource<EnumerateConcreteGenericsEvent>, IEventSource<PostProcessButtonsEvent>
+        IEventSource<BuildCustomGenericBuilder>, IEventSource<EnumerateConcreteGenericsEvent>,
+        IEventSource<PostProcessButtonsEvent>
     {
         private static readonly ConditionalWeakTable<ComponentSelector, SelectorData> _selectorData = new();
 
         private static CancelableEventDispatching<BuildCategoryButtonEvent>? _buildCategoryButton;
         private static CancelableEventDispatching<BuildComponentButtonEvent>? _buildComponentButton;
+        private static EventDispatching<BuildCustomGenericBuilder>? _buildCustomGenericBuilder;
         private static EventDispatching<BuildSelectorFooterEvent>? _buildFooter;
         private static CancelableEventDispatching<BuildGroupButtonEvent>? _buildGroupButton;
         private static EventDispatching<BuildSelectorHeaderEvent>? _buildHeader;
@@ -38,7 +41,6 @@ namespace ComponentSelectorAdditions
         private static CancelableEventDispatching<EnumerateComponentsEvent>? _enumerateComponents;
         private static EventDispatching<EnumerateConcreteGenericsEvent>? _enumerateConcreteGenerics;
         private static EventDispatching<PostProcessButtonsEvent>? _postProcessButtons;
-
         public override bool CanBeDisabled => true;
 
         protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
@@ -51,6 +53,8 @@ namespace ComponentSelectorAdditions
             Mod.RegisterEventSource<EnumerateCategoriesEvent>(this);
             Mod.RegisterEventSource<EnumerateComponentsEvent>(this);
             Mod.RegisterEventSource<EnumerateConcreteGenericsEvent>(this);
+
+            Mod.RegisterEventSource<BuildCustomGenericBuilder>(this);
 
             Mod.RegisterEventSource<BuildCategoryButtonEvent>(this);
             Mod.RegisterEventSource<BuildGroupButtonEvent>(this);
@@ -71,6 +75,8 @@ namespace ComponentSelectorAdditions
                 Mod.UnregisterEventSource<EnumerateCategoriesEvent>(this);
                 Mod.UnregisterEventSource<EnumerateComponentsEvent>(this);
                 Mod.UnregisterEventSource<EnumerateConcreteGenericsEvent>(this);
+
+                Mod.RegisterEventSource<BuildCustomGenericBuilder>(this);
 
                 Mod.UnregisterEventSource<BuildCategoryButtonEvent>(this);
                 Mod.UnregisterEventSource<BuildGroupButtonEvent>(this);
@@ -153,7 +159,7 @@ namespace ComponentSelectorAdditions
             }
         }
 
-        private static void BuildGenericTypeUI(ComponentSelector selector, UIBuilder ui, SelectorPath path, bool doNotGenerateBack, out Button? backButton, out Button? customGenericButton)
+        private static void BuildGenericTypeUI(ComponentSelector selector, UIBuilder ui, SelectorPath path, bool doNotGenerateBack, out Button? backButton, out Button? customGenericButton, out HashSet<Button> otherAddedButtons)
         {
             backButton = null;
 
@@ -165,38 +171,33 @@ namespace ComponentSelectorAdditions
 
             ui.Text("ComponentSelector.CustomGenericArguments".AsLocaleKey());
 
-            var genericArguments = type.GetGenericArguments();
-            foreach (var genericArgument in genericArguments)
-            {
-                var textField = ui.HorizontalElementWithLabel(genericArgument.Name, .05f, () => ui.TextField(string.Empty, undo: false, null, parseRTF: false));
+            var customGenericBuilderData = OnBuildCustomGenericBuilder(selector, ui, type);
+            customGenericButton = customGenericBuilderData.CreateCustomTypeButton!;
+            otherAddedButtons = customGenericBuilderData.OtherAddedButtonsSet;
 
-                if (selector.GenericArgumentPrefiller.Target != null)
-                    textField.TargetString = selector.GenericArgumentPrefiller.Target(type, genericArgument);
-
-                selector._customGenericArguments.Add(textField);
-            }
-
-            customGenericButton = ui.Button((LocaleString)string.Empty, RadiantUI_Constants.BUTTON_COLOR, selector.OnCreateCustomType, .35f);
-            selector._customGenericTypeLabel.Target = customGenericButton.Label.Content;
-            selector._customGenericTypeColor.Target = customGenericButton.BaseColor;
+            ui.Panel();
+            ui.NestOut();
 
             var concreteGenericsEventData = OnEnumerateConcreteGenerics(selector, type);
 
-            ui.Text("ComponentSelector.CustomGenericArguments".AsLocaleKey());
-
-            foreach (var concreteType in concreteGenericsEventData.Items)
+            if (concreteGenericsEventData.Items.Any())
             {
-                try
+                ui.Text("ComponentSelector.CommonGenericTypes".AsLocaleKey());
+
+                foreach (var concreteType in concreteGenericsEventData.Items)
                 {
-                    if (concreteType.IsValidGenericType(true))
+                    try
                     {
-                        ui.Button(concreteType.GetNiceName(), RadiantUI_Constants.Sub.CYAN, selector.OnAddComponentPressed,
-                            TypeHelper.TryGetAlias(concreteType) ?? concreteType.FullName, .35f).Label.ParseRichText.Value = false;
+                        if (concreteType.IsValidGenericType(true))
+                        {
+                            ui.Button(concreteType.GetNiceName(), RadiantUI_Constants.Sub.CYAN, selector.OnAddComponentPressed,
+                                TypeHelper.TryGetAlias(concreteType) ?? concreteType.FullName, .35f).Label.ParseRichText.Value = false;
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    UniLog.Warning(ex.Format("Exception checking validity of a generic type: " + concreteType?.ToString() + " for " + type?.ToString()));
+                    catch (Exception ex)
+                    {
+                        UniLog.Warning(ex.Format("Exception checking validity of a generic type: " + concreteType?.ToString() + " for " + type?.ToString()));
+                    }
                 }
             }
         }
@@ -231,23 +232,20 @@ namespace ComponentSelectorAdditions
             Button? backButton;
             Button? customGenericButton = null;
             Button? cancelButton = null;
+            HashSet<Button>? otherAddedButtons = null;
 
             if (genericType)
-            {
-                BuildGenericTypeUI(__instance, ui, selectorPath, doNotGenerateBack, out backButton, out customGenericButton);
-            }
+                BuildGenericTypeUI(__instance, ui, selectorPath, doNotGenerateBack, out backButton, out customGenericButton, out otherAddedButtons);
             else
-            {
                 BuildCategoryUI(__instance, ui, selectorData, doNotGenerateBack, out backButton);
 
-                if (!selectorData.HasCancelButton)
-                {
-                    cancelButton = ui.Button("General.Cancel".AsLocaleKey(), RadiantUI_Constants.Sub.RED, __instance.OnCancelPressed, 0.35f);
-                    cancelButton.Slot.OrderOffset = 1000000L;
-                }
+            if (!selectorData.HasCancelButton)
+            {
+                cancelButton = ui.Button("General.Cancel".AsLocaleKey(), RadiantUI_Constants.Sub.RED, __instance.OnCancelPressed, 0.35f);
+                cancelButton.Slot.OrderOffset = 1000000L;
             }
 
-            OnPostProcessButtons(__instance, selectorData.CurrentPath, ui, backButton, customGenericButton, cancelButton);
+            OnPostProcessButtons(__instance, selectorData.CurrentPath, ui, backButton, customGenericButton, cancelButton, otherAddedButtons);
 
             return false;
         }
@@ -335,6 +333,8 @@ namespace ComponentSelectorAdditions
 
             _buildCategoryButton?.Invoke(eventData);
 
+            ui.NestInto(root);
+
             if (!eventData.Canceled)
             {
                 ui.Button(
@@ -342,8 +342,6 @@ namespace ComponentSelectorAdditions
                     RadiantUI_Constants.Sub.YELLOW, selector.OnOpenCategoryPressed, subCategory.GetPath(),
                     0.35f).Label.ParseRichText.Value = false;
             }
-
-            ui.NestInto(root);
         }
 
         private static void OnBuildComponentButton(ComponentSelector selector, UIBuilder ui, SelectorPath path, CategoryNode<Type> rootCategory, ComponentResult component)
@@ -352,6 +350,8 @@ namespace ComponentSelectorAdditions
             var eventData = new BuildComponentButtonEvent(selector, ui, path, rootCategory, component);
 
             _buildComponentButton?.Invoke(eventData);
+
+            ui.NestInto(root);
 
             if (!eventData.Canceled)
             {
@@ -366,11 +366,53 @@ namespace ComponentSelectorAdditions
             ui.NestInto(root);
         }
 
+        private static BuildCustomGenericBuilder OnBuildCustomGenericBuilder(ComponentSelector selector, UIBuilder ui, Type component)
+        {
+            var root = ui.Root;
+            var eventData = new BuildCustomGenericBuilder(selector, ui, component);
+
+            _buildCustomGenericBuilder?.Invoke(eventData);
+
+            ui.NestInto(root);
+
+            if (!eventData.AddsGenericArgumentInputs)
+            {
+                foreach (var genericArgument in eventData.GenericArguments)
+                {
+                    var textField = ui.HorizontalElementWithLabel(genericArgument.Name, .05f, () =>
+                    {
+                        var textField = ui.TextField(null, false, null, false);
+                        textField.Text.NullContent.AssignLocaleString(Mod.GetLocaleString("EnterType"));
+
+                        return textField;
+                    }, out var label);
+
+                    label.HorizontalAlign.Value = Elements.Assets.TextHorizontalAlignment.Center;
+
+                    if (selector.GenericArgumentPrefiller.Target != null)
+                        textField.TargetString = selector.GenericArgumentPrefiller.Target(component, genericArgument);
+
+                    selector._customGenericArguments.Add(textField);
+                }
+            }
+
+            if (!eventData.AddsCreateCustomTypeButton)
+                eventData.CreateCustomTypeButton = ui.Button((LocaleString)string.Empty, RadiantUI_Constants.BUTTON_COLOR, selector.OnCreateCustomType, .35f);
+
+            selector._customGenericTypeLabel.Target = eventData.CreateCustomTypeButton.Label.Content;
+            selector._customGenericTypeColor.Target = eventData.CreateCustomTypeButton.BaseColor;
+
+            return eventData;
+        }
+
         private static BuildSelectorFooterEvent OnBuildFooter(ComponentSelector selector, UIBuilder ui, SelectorSearchBar? searchBar, bool hasBackButton, bool hasCancelButton)
         {
+            var root = ui.Root;
             var eventData = new BuildSelectorFooterEvent(selector, ui, searchBar, hasBackButton, hasCancelButton);
 
             _buildFooter?.Invoke(eventData);
+
+            ui.NestInto(root);
 
             return eventData;
         }
@@ -381,6 +423,8 @@ namespace ComponentSelectorAdditions
             var eventData = new BuildGroupButtonEvent(selector, ui, rootCategory, groupComponent);
 
             _buildGroupButton?.Invoke(eventData);
+
+            ui.NestInto(root);
 
             if (!eventData.Canceled)
             {
@@ -396,9 +440,12 @@ namespace ComponentSelectorAdditions
 
         private static BuildSelectorHeaderEvent OnBuildHeader(ComponentSelector selector, UIBuilder ui)
         {
+            var root = ui.Root;
             var eventData = new BuildSelectorHeaderEvent(selector, ui);
 
             _buildHeader?.Invoke(eventData);
+
+            ui.NestInto(root);
 
             return eventData;
         }
@@ -446,7 +493,7 @@ namespace ComponentSelectorAdditions
         }
 
         private static void OnPostProcessButtons(ComponentSelector selector, SelectorPath path,
-            UIBuilder ui, Button? backButton, Button? customGenericButton, Button? cancelButton)
+            UIBuilder ui, Button? backButton, Button? customGenericButton, Button? cancelButton, HashSet<Button>? otherAddedButtons)
         {
             // Lock in UI Order through the Offsets
             var index = 0;
@@ -454,7 +501,7 @@ namespace ComponentSelectorAdditions
                 child.OrderOffset = 10 * index++;
 
             var root = ui.Root;
-            var eventData = new PostProcessButtonsEvent(selector, path, ui, backButton, customGenericButton, cancelButton);
+            var eventData = new PostProcessButtonsEvent(selector, path, ui, backButton, customGenericButton, cancelButton, otherAddedButtons);
 
             _postProcessButtons?.Invoke(eventData);
 
@@ -579,6 +626,12 @@ namespace ComponentSelectorAdditions
         {
             add => _postProcessButtons += value;
             remove => _postProcessButtons -= value;
+        }
+
+        event EventDispatching<BuildCustomGenericBuilder>? IEventSource<BuildCustomGenericBuilder>.Dispatching
+        {
+            add => _buildCustomGenericBuilder += value;
+            remove => _buildCustomGenericBuilder -= value;
         }
 
         private sealed class SelectorData
