@@ -40,7 +40,7 @@ namespace ComponentSelectorAdditions.Events
 
         public ComponentSelector Selector { get; }
 
-        internal PostProcessButtonsEvent(ComponentSelector selector, SelectorPath path, UIBuilder ui, Button? backButton, Button? customGenericButton, Button? cancelButton)
+        internal PostProcessButtonsEvent(ComponentSelector selector, SelectorPath path, UIBuilder ui, Button? backButton, Button? customGenericButton, Button? cancelButton, HashSet<Button>? otherAddedButtons)
             : base(ui)
         {
             Selector = selector;
@@ -51,7 +51,7 @@ namespace ComponentSelectorAdditions.Events
             CancelButton = cancelButton;
 
             var buttons = selector._uiRoot.Target
-                .GetComponentsInChildren<Button>(button => button != backButton && button != cancelButton)
+                .GetComponentsInChildren<Button>(button => button != backButton && button != cancelButton && button != customGenericButton && (otherAddedButtons is null || !otherAddedButtons.Contains(button)))
                 .Select(button => (Button: button, Relay: button.Slot.GetComponent<ButtonRelay<string>>()))
                 .Where(data => data.Relay != null)
                 .ToArray();

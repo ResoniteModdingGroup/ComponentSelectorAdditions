@@ -5,11 +5,13 @@
     "ComponentSelectorAdditions.Description": "Dieser MonkeyLoader Mod für Resonite strukturiert Komponenten-Selektoren und ProtoFlux Nodebrowser neu und fügt eine Suchfunktion sowie Kategorien für zuletzt genutzte und favorisierte Komponenten / Nodes hinzu.",
 
     "ComponentSelectorAdditions.Search": "<i>Suchen ...</i>",
+    "ComponentSelectorAdditions.EnterType": "<i>Typ eingeben...</i>",
 
     "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Fügt eine Anzeige für den Pfad der aktuellen Kategorie (und des generischen Typs) zu Komponenten-Selektoren hinzu.",
     "ComponentSelectorAdditions.FavoritesCategories.Description": "Fügt 'Favorites' Kategorien zu den Wurzelkategorien von Komponenten-Selektoren und ProtoFlux Nodebrowsern hinzu und macht Kategorien und Komponenten / Nodes favorisierbar.",
     "ComponentSelectorAdditions.FixedBackButton.Description": "Platziert den 'Zurück' Knopf bei Komponent-Selektoren außerhalb des scrollbaren Bereichs.",
     "ComponentSelectorAdditions.FixedCancelButton.Description": "Platziert den 'Abbrechen' Knopf bei Komponent-Selektoren außerhalb des scrollbaren Bereichs.",
+    "ComponentSelectorAdditions.GenericPresetsHandler.Description": "Erlaubt es benutzerdefinierte generische Argumente als Muster zu speichern, welche dann zur Liste der häufig verwendeten generischen Typen für alle validen Komponenten / Nodes hinzugefügt werden.",
     "ComponentSelectorAdditions.Injector.Description": "Macht die Komponenten-Selektor-Generation und -Auflistung modular indem sie durch Events ausgeführt werden.",
     "ComponentSelectorAdditions.RecentsCategories.Description": "Fügt 'Recents' Kategorien zu den Wurzelkategorien von Komponenten-Selektoren und ProtoFlux Nodebrowsern hinzu, welche die zuletzt Genutzten auflisten.",
     "ComponentSelectorAdditions.SearchBar.Description": "Fügt eine Suchleiste zu Komponenten-Selektoren hinzu, welche es erlaubt Komponenten und ProtoFlux Nodes zu suchen.",
