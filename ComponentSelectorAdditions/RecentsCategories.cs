@@ -125,7 +125,7 @@ namespace ComponentSelectorAdditions
             if (!Enabled)
                 return;
 
-            var type = WorkerManager.ParseNiceType(typename);
+            var type = __instance.World.Types.DecodeType(typename);
             if (type is null || type.IsGenericTypeDefinition)
                 return;
 

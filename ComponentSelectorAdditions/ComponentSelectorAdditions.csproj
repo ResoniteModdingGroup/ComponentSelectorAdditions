@@ -11,7 +11,7 @@
     <PackageId>ComponentSelectorAdditions</PackageId>
     <Title>Component Selector Additions</Title>
     <Authors>Banane9</Authors>
-    <Version>0.2.0-beta</Version>
+    <Version>0.3.0-beta</Version>
     <Description>This MonkeyLoader mod for Resonite overhauls the Component Selector / Protoflux Node Selector to have a search, as well as favorites and recents categories.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -30,17 +30,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonkeyLoader" Version="0.18.0-beta" />
-    <PackageReference Include="MonkeyLoader.GamePacks.Resonite" Version="0.16.5-beta" />
+    <PackageReference Include="MonkeyLoader" Version="0.19.1-beta" />
+    <PackageReference Include="MonkeyLoader.GamePacks.Resonite" Version="0.17.0-beta" />
     <PackageReference Include="PolySharp" Version="1.14.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Resonite.Elements.Core" Version="1.0.2" />
-    <PackageReference Include="Resonite.FrooxEngine" Version="2024.6.11.74" />
-    <PackageReference Include="System.Text.Json" Version="8.0.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Resonite.Elements.Core" Version="1.1.0" />
+    <PackageReference Include="Resonite.FrooxEngine" Version="2024.7.11.1293" />
   </ItemGroup>
 </Project>

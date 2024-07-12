@@ -163,7 +163,7 @@ namespace ComponentSelectorAdditions
         {
             backButton = null;
 
-            var type = WorkerManager.GetType(PathUtility.GetFileName(path.PathSegments[^1]));
+            var type = Type.GetType(path.PathSegments[^1]);
             selector._genericType.Value = type;
 
             if (!doNotGenerateBack)
@@ -358,7 +358,7 @@ namespace ComponentSelectorAdditions
                 var category = GetPrettyPath(component.Category, rootCategory);
                 var tint = component.IsGeneric ? RadiantUI_Constants.Sub.GREEN : RadiantUI_Constants.Sub.CYAN;
                 ButtonEventHandler<string> callback = component.IsGeneric ? selector.OpenGenericTypesPressed : selector.OnAddComponentPressed;
-                var argument = $"{(component.IsGeneric ? $"{path.Path}/" : "")}{component.FullName}{(component.IsGeneric && path.HasGroup ? $"?{path.Group}" : "")}";
+                var argument = $"{(component.IsGeneric ? $"{path.Path}/" : "")}{selector.World.Types.EncodeType(component.Type)}{(component.IsGeneric && path.HasGroup ? $"?{path.Group}" : "")}";
 
                 MakePermanentButton(ui, category, component.NiceName, tint, callback, argument);
             }

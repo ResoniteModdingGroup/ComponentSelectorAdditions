@@ -12,7 +12,7 @@ namespace ComponentSelectorAdditions.Events
 
         public bool HasCancelButton { get; }
 
-        public BuildSelectorFooterEvent(ComponentSelector selector, UIBuilder ui, SelectorSearchBar? searchBar, bool hasBackButton, bool hasCancelButton)
+        internal BuildSelectorFooterEvent(ComponentSelector selector, UIBuilder ui, SelectorSearchBar? searchBar, bool hasBackButton, bool hasCancelButton)
             : base(selector, ui)
         {
             HasBackButton = hasBackButton;

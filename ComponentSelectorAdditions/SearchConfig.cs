@@ -13,6 +13,11 @@ using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {
+    /// <summary>
+    /// Represents the configuration for the search functionality.<br/>
+    /// Use the <see cref="AddExcludedCategory(string)"/> and <see cref="RemoveExcludedCategory(string)"/>
+    /// methods to add categories which shouldn't be searched into because they're added.
+    /// </summary>
     public sealed class SearchConfig : ConfigSection
     {
         private static readonly Dictionary<string, bool> _excludedCategories = new(StringComparer.OrdinalIgnoreCase);
@@ -29,10 +34,21 @@ namespace ComponentSelectorAdditions
 
         private static readonly DefiningConfigKey<string> _userExcludedCategoriesKey = new("UserExcludedCategories", "Excludes specific categories from being searched into by path (case sensitive). Separate entries by semicolon. Search will work when started inside them.", () => "/ProtoFlux");
         private static readonly char[] _userExclusionSeparator = new[] { ';' };
-        public static SearchConfig Instance { get; private set; }
+
+        /// <summary>
+        /// Gets this config's instance.
+        /// </summary>
+        public static SearchConfig Instance { get; private set; } = null!;
+
+        /// <inheritdoc/>
         public override string Description => "Contains settings for the Component Selector Search.";
+
+        /// <inheritdoc/>
         public override string Id => "Search";
+
+        /// <inheritdoc/>
         public override Version Version { get; } = new(1, 0, 0);
+
         internal int MaxResultCount => _maxResultCountKey.GetValue();
         internal int SearchRefreshDelay => (int)_searchRefreshDelayKey.GetValue();
 
@@ -41,6 +57,10 @@ namespace ComponentSelectorAdditions
             _userExcludedCategoriesKey.Changed += UserExcludedCategoriesChanged;
         }
 
+        /// <summary>
+        /// Creates an instance of this config once.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         public SearchConfig()
         {
             if (Instance is not null)
@@ -87,6 +107,7 @@ namespace ComponentSelectorAdditions
             return true;
         }
 
+        /// <inheritdoc/>
         protected override void OnLoad(JObject source, JsonSerializer jsonSerializer)
         {
             base.OnLoad(source, jsonSerializer);

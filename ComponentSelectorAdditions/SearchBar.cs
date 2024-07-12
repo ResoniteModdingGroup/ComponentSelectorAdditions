@@ -40,7 +40,7 @@ namespace ComponentSelectorAdditions
 
             ui.Style.FlexibleWidth = 1;
             var textField = ui.TextField(null, parseRTF: false);
-            var details = new SelectorSearchBar(searchLayout, textField.Editor.Target, ConfigSection.SearchRefreshDelay);
+            var details = new SelectorSearchBar(searchLayout, textField.Editor.Target, () => ConfigSection.SearchRefreshDelay);
             eventData.SearchBar = details;
 
             details.Text.NullContent.AssignLocaleString(Mod.GetLocaleString("Search"));

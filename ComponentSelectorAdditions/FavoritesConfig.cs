@@ -17,16 +17,25 @@ namespace ComponentSelectorAdditions
         private static readonly DefiningConfigKey<bool> _sortFavoriteCategoriesToTop = new("SortFavoriteCategoriesToTop", "Sort favorited Categories above unfavorited ones.", () => false);
         private static readonly DefiningConfigKey<bool> _sortFavoriteComponentsToTop = new("SortFavoriteComponentsToTop", "Sort favorited Components / Nodes above unfavorited ones.", () => true);
         private static readonly DefiningConfigKey<bool> _sortFavoriteConcreteGenericsToTop = new("SortFavoriteConcreteGenericsToTop", "Sort favorited concrete generic Components / Nodes above unfavorited ones.", () => true);
+
         public HashSet<string> Categories => _categoriesKey.GetValue()!;
 
         public HashSet<Type> Components => _componentsKey.GetValue()!;
+
         public override string Description => "Contains the favorited categories and components.";
+
         public override string Id => "Favorites";
+
         public HashSet<string> ProtoFluxCategories => _protoFluxCategoriesKey.GetValue()!;
+
         public HashSet<Type> ProtoFluxNodes => _protoFluxNodesKey.GetValue()!;
+
         public bool SortFavoriteCategoriesToTop => _sortFavoriteCategoriesToTop.GetValue();
+
         public bool SortFavoriteComponentsToTop => _sortFavoriteComponentsToTop.GetValue();
+
         public bool SortFavoriteConcreteGenericsToTop => _sortFavoriteConcreteGenericsToTop.GetValue();
+
         public override Version Version { get; } = new(1, 1, 0);
     }
 }

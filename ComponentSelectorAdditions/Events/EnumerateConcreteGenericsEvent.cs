@@ -1,6 +1,8 @@
 ﻿using FrooxEngine;
 using MonkeyLoader.Resonite.Events;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ComponentSelectorAdditions.Events
 {
@@ -12,9 +14,16 @@ namespace ComponentSelectorAdditions.Events
         /// </summary>
         public Type Component { get; }
 
+        /// <inheritdoc/>
+        public override IEnumerable<Type> Items
+            => sortableItems
+                .Where(entry => Selector.World.Types.IsSupported(entry.Key))
+                .OrderBy(entry => entry.Value)
+                .Select(entry => entry.Key);
+
         public ComponentSelector Selector { get; }
 
-        public EnumerateConcreteGenericsEvent(ComponentSelector selector, Type component)
+        internal EnumerateConcreteGenericsEvent(ComponentSelector selector, Type component)
         {
             Selector = selector;
             Component = component;

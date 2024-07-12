@@ -120,9 +120,10 @@ namespace ComponentSelectorAdditions
 
             foreach (var addButton in eventData.AddButtons.Concat(eventData.GenericButtons))
             {
-                AddFavoriteButton(eventData.UI, addButton, true,
-                    isProtoFlux ? IsFavoriteProtoFluxNode : IsFavoriteComponent,
-                    isProtoFlux ? ToggleFavoriteProtoFluxNode : ToggleFavoriteComponent);
+                Func<TypeManager, string, bool> isFavorite = isProtoFlux ? IsFavoriteProtoFluxNode : IsFavoriteComponent;
+                Func<TypeManager, string, bool> toggleFavorite = isProtoFlux ? ToggleFavoriteProtoFluxNode : ToggleFavoriteComponent;
+
+                AddFavoriteButton(eventData.UI, addButton, true, isFavorite, toggleFavorite);
             }
         }
 
@@ -175,8 +176,10 @@ namespace ComponentSelectorAdditions
             return base.OnShutdown(applicationExiting);
         }
 
-        private static void AddFavoriteButton(UIBuilder builder, Button button, bool isComponent, Predicate<string> isFavorite, Func<string, bool> toggleFavorite)
+        private static void AddFavoriteButton(UIBuilder builder, Button button, bool isComponent,
+            Func<TypeManager, string, bool> isFavorite, Func<TypeManager, string, bool> toggleFavorite)
         {
+            var types = button.World.Types;
             builder.NestInto(button.Slot.Parent);
 
             var height = button.Slot.GetComponent<LayoutElement>().MinHeight;
@@ -199,14 +202,14 @@ namespace ComponentSelectorAdditions
                 name = name.Substring(lastSlashIndex + 1);
             }
 
-            var favColor = isFavorite(name) ? RadiantUI_Constants.Hero.YELLOW : RadiantUI_Constants.Neutrals.DARKLIGHT;
+            var favColor = isFavorite(types, name) ? RadiantUI_Constants.Hero.YELLOW : RadiantUI_Constants.Neutrals.DARKLIGHT;
 
             var favoriteButton = builder.Button(OfficialAssets.Graphics.Icons.World_Categories.FeaturedRibbon, RadiantUI_Constants.BUTTON_COLOR, favColor);
             var icon = favoriteButton.Slot.GetComponentsInChildren<Image>().Last();
 
             favoriteButton.LocalPressed += (btn, btnEvent) =>
             {
-                icon.Tint.Value = toggleFavorite(name) ?
+                icon.Tint.Value = toggleFavorite(types, name) ?
                     RadiantUI_Constants.Hero.YELLOW : RadiantUI_Constants.Neutrals.DARKLIGHT;
 
                 Config.Save();
@@ -231,16 +234,16 @@ namespace ComponentSelectorAdditions
             SearchConfig.Instance.AddExcludedCategory(ProtoFluxFavoritesPath);
         }
 
-        private bool IsFavoriteCategory(string name)
+        private bool IsFavoriteCategory(TypeManager types, string name)
             => ConfigSection.Categories.Contains(name);
 
-        private bool IsFavoriteComponent(string name)
-            => ConfigSection.Components.Contains(WorkerManager.ParseNiceType(name));
+        private bool IsFavoriteComponent(TypeManager types, string name)
+            => ConfigSection.Components.Contains(types.DecodeType(name));
 
-        private bool IsFavoriteProtoFluxNode(string name)
-            => ConfigSection.ProtoFluxNodes.Contains(WorkerManager.ParseNiceType(name));
+        private bool IsFavoriteProtoFluxNode(TypeManager types, string name)
+            => ConfigSection.ProtoFluxNodes.Contains(types.DecodeType(name));
 
-        private bool IsProtoFluxFavoriteCategory(string name)
+        private bool IsProtoFluxFavoriteCategory(TypeManager types, string name)
             => ConfigSection.ProtoFluxCategories.Contains(name);
 
         private void RemoveCategories()
@@ -252,16 +255,16 @@ namespace ComponentSelectorAdditions
             SearchConfig.Instance.RemoveExcludedCategory(ProtoFluxFavoritesPath);
         }
 
-        private bool ToggleFavoriteCategory(string name)
+        private bool ToggleFavoriteCategory(TypeManager types, string name)
             => ToggleHashSetContains(ConfigSection.Categories, name);
 
-        private bool ToggleFavoriteComponent(string name)
-            => ToggleHashSetContains(ConfigSection.Components, WorkerManager.ParseNiceType(name));
+        private bool ToggleFavoriteComponent(TypeManager types, string name)
+            => ToggleHashSetContains(ConfigSection.Components, types.DecodeType(name));
 
-        private bool ToggleFavoriteProtoFluxNode(string name)
-            => ToggleHashSetContains(ConfigSection.ProtoFluxNodes, WorkerManager.ParseNiceType(name));
+        private bool ToggleFavoriteProtoFluxNode(TypeManager types, string name)
+            => ToggleHashSetContains(ConfigSection.ProtoFluxNodes, types.DecodeType(name));
 
-        private bool ToggleProtoFluxFavoriteCategory(string name)
+        private bool ToggleProtoFluxFavoriteCategory(TypeManager types, string name)
             => ToggleHashSetContains(ConfigSection.ProtoFluxCategories, name);
     }
 }

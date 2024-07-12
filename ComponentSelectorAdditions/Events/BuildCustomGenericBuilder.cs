@@ -38,7 +38,7 @@ namespace ComponentSelectorAdditions.Events
         public IEnumerable<Button> OtherAddedButtons => OtherAddedButtonsSet.AsSafeEnumerable();
         public ComponentSelector Selector { get; }
 
-        public BuildCustomGenericBuilder(ComponentSelector selector, UIBuilder ui, Type component) : base(ui)
+        internal BuildCustomGenericBuilder(ComponentSelector selector, UIBuilder ui, Type component) : base(ui)
         {
             Selector = selector;
             Component = component;

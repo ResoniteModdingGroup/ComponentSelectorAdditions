@@ -14,6 +14,7 @@ namespace ComponentSelectorAdditions.Events
         public override IEnumerable<ComponentResult> Items
             => sortableItems
                 .Where(entry => ComponentFilter(entry.Key.Type))
+                .Where(entry => Selector.World.Types.IsSupported(entry.Key.Type))
                 .OrderBy(entry => entry.Value)
                 .ThenBy(entry => entry.Key.GroupName ?? entry.Key.Type.Name)
                 .Select(entry => entry.Key);
@@ -24,7 +25,7 @@ namespace ComponentSelectorAdditions.Events
         public ComponentSelector Selector { get; }
 
         /// <inheritdoc/>
-        public EnumerateComponentsEvent(ComponentSelector selector, SelectorPath path, CategoryNode<Type> rootCategory, Predicate<Type> componentFilter)
+        internal EnumerateComponentsEvent(ComponentSelector selector, SelectorPath path, CategoryNode<Type> rootCategory, Predicate<Type> componentFilter)
         {
             Selector = selector;
             Path = path;
