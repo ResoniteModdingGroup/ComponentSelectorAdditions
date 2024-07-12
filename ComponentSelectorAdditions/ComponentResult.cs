@@ -18,7 +18,7 @@ namespace ComponentSelectorAdditions
         /// <summary>
         /// Gets the category that should be shown as the <see cref="Type">Type's</see> parent.
         /// </summary>
-        public CategoryNode<Type> Category { get; }
+        public CategoryNode<Type>? Category { get; }
 
         /// <summary>
         /// Gets the <see cref="Type">Type's</see> group identifier, if present.
@@ -29,6 +29,12 @@ namespace ComponentSelectorAdditions
         /// Gets the <see cref="Type">Type's</see> group name, if present.
         /// </summary>
         public string? GroupName { get; }
+
+        /// <summary>
+        /// Gets whether this <see cref="Type">Type</see> has a category.
+        /// </summary>
+        [MemberNotNullWhen(true, nameof(Category))]
+        public bool HasCategory => Category is not null;
 
         /// <summary>
         /// Gets whether the <see cref="Type">Type</see> is part of a group.
@@ -56,7 +62,7 @@ namespace ComponentSelectorAdditions
         /// </summary>
         /// <param name="category">The category that should be shown as the <see cref="Type">Type's</see> parent.</param>
         /// <param name="type">The component / node <see cref="System.Type"/>.</param>
-        public ComponentResult(CategoryNode<Type> category, Type type)
+        public ComponentResult(CategoryNode<Type>? category, Type type)
         {
             Type = type;
             Category = category;

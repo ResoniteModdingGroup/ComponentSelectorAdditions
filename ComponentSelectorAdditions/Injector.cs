@@ -159,7 +159,8 @@ namespace ComponentSelectorAdditions
             }
         }
 
-        private static void BuildGenericTypeUI(ComponentSelector selector, UIBuilder ui, SelectorPath path, bool doNotGenerateBack, out Button? backButton, out Button? customGenericButton, out HashSet<Button> otherAddedButtons)
+        private static void BuildGenericTypeUI(ComponentSelector selector, UIBuilder ui, SelectorPath path,
+            bool doNotGenerateBack, out Button? backButton, out Button? customGenericButton, out HashSet<Button> otherAddedButtons)
         {
             backButton = null;
 
@@ -190,8 +191,7 @@ namespace ComponentSelectorAdditions
                     {
                         if (concreteType.IsValidGenericType(true))
                         {
-                            ui.Button(concreteType.GetNiceName(), RadiantUI_Constants.Sub.CYAN, selector.OnAddComponentPressed,
-                                TypeHelper.TryGetAlias(concreteType) ?? concreteType.FullName, .35f).Label.ParseRichText.Value = false;
+                            OnBuildComponentButton(selector, ui, path, null, new ComponentResult(null, concreteType));
                         }
                     }
                     catch (Exception ex)
@@ -250,7 +250,7 @@ namespace ComponentSelectorAdditions
             return false;
         }
 
-        private static IEnumerable<string> EnumerateParents<T>(CategoryNode<T> start, CategoryNode<T>? end = null)
+        private static IEnumerable<string> EnumerateParents<T>(CategoryNode<T>? start, CategoryNode<T>? end = null)
         {
             var current = start;
 
@@ -261,7 +261,7 @@ namespace ComponentSelectorAdditions
             }
         }
 
-        private static string? GetPrettyPath<T>(CategoryNode<T> subCategory, CategoryNode<T>? rootCategory = null, string delimiter = " > ")
+        private static string? GetPrettyPath<T>(CategoryNode<T>? subCategory, CategoryNode<T>? rootCategory = null, string delimiter = " > ")
         {
             var segments = EnumerateParents(subCategory, rootCategory);
 
@@ -344,7 +344,7 @@ namespace ComponentSelectorAdditions
             }
         }
 
-        private static void OnBuildComponentButton(ComponentSelector selector, UIBuilder ui, SelectorPath path, CategoryNode<Type> rootCategory, ComponentResult component)
+        private static void OnBuildComponentButton(ComponentSelector selector, UIBuilder ui, SelectorPath path, CategoryNode<Type>? rootCategory, ComponentResult component)
         {
             var root = ui.Root;
             var eventData = new BuildComponentButtonEvent(selector, ui, path, rootCategory, component);
@@ -358,7 +358,7 @@ namespace ComponentSelectorAdditions
                 var category = GetPrettyPath(component.Category, rootCategory);
                 var tint = component.IsGeneric ? RadiantUI_Constants.Sub.GREEN : RadiantUI_Constants.Sub.CYAN;
                 ButtonEventHandler<string> callback = component.IsGeneric ? selector.OpenGenericTypesPressed : selector.OnAddComponentPressed;
-                var argument = $"{(component.IsGeneric ? $"{path.Path}/" : "")}{selector.World.Types.EncodeType(component.Type)}{(component.IsGeneric && path.HasGroup ? $"?{path.Group}" : "")}";
+                var argument = $"{(component.IsGeneric ? $"{path.Path}/{component.Type.AssemblyQualifiedName}" : selector.World.Types.EncodeType(component.Type))}{(component.IsGeneric && path.HasGroup ? $"?{path.Group}" : "")}";
 
                 MakePermanentButton(ui, category, component.NiceName, tint, callback, argument);
             }

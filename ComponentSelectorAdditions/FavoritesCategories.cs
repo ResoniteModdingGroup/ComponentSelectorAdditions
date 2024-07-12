@@ -238,10 +238,10 @@ namespace ComponentSelectorAdditions
             => ConfigSection.Categories.Contains(name);
 
         private bool IsFavoriteComponent(TypeManager types, string name)
-            => ConfigSection.Components.Contains(types.DecodeType(name));
+            => ConfigSection.Components.Contains(types.DecodeType(name) ?? Type.GetType(name));
 
         private bool IsFavoriteProtoFluxNode(TypeManager types, string name)
-            => ConfigSection.ProtoFluxNodes.Contains(types.DecodeType(name));
+            => ConfigSection.ProtoFluxNodes.Contains(types.DecodeType(name) ?? Type.GetType(name));
 
         private bool IsProtoFluxFavoriteCategory(TypeManager types, string name)
             => ConfigSection.ProtoFluxCategories.Contains(name);
@@ -259,10 +259,10 @@ namespace ComponentSelectorAdditions
             => ToggleHashSetContains(ConfigSection.Categories, name);
 
         private bool ToggleFavoriteComponent(TypeManager types, string name)
-            => ToggleHashSetContains(ConfigSection.Components, types.DecodeType(name));
+            => ToggleHashSetContains(ConfigSection.Components, types.DecodeType(name) ?? Type.GetType(name));
 
         private bool ToggleFavoriteProtoFluxNode(TypeManager types, string name)
-            => ToggleHashSetContains(ConfigSection.ProtoFluxNodes, types.DecodeType(name));
+            => ToggleHashSetContains(ConfigSection.ProtoFluxNodes, types.DecodeType(name) ?? Type.GetType(name));
 
         private bool ToggleProtoFluxFavoriteCategory(TypeManager types, string name)
             => ToggleHashSetContains(ConfigSection.ProtoFluxCategories, name);

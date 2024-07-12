@@ -15,7 +15,7 @@ namespace ComponentSelectorAdditions.Events
         public SelectorPath Path { get; }
 
         /// <inheritdoc/>
-        internal BuildComponentButtonEvent(ComponentSelector selector, UIBuilder ui, SelectorPath path, CategoryNode<Type> rootCategory, ComponentResult component)
+        internal BuildComponentButtonEvent(ComponentSelector selector, UIBuilder ui, SelectorPath path, CategoryNode<Type>? rootCategory, ComponentResult component)
             : base(selector, ui, rootCategory, component.Category, component.Category == rootCategory)
         {
             Path = path;
