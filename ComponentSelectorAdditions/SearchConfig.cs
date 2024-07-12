@@ -22,17 +22,17 @@ namespace ComponentSelectorAdditions
     {
         private static readonly Dictionary<string, bool> _excludedCategories = new(StringComparer.OrdinalIgnoreCase);
 
-        private static readonly DefiningConfigKey<int> _maxResultCountKey = new("MaxResultCount", "The maximum number of component / node results to display. 'Better' results are listed first. Categories don't count.", () => 64)
+        private static readonly DefiningConfigKey<int> _maxResultCount = new("MaxResultCount", "The maximum number of component / node results to display. 'Better' results are listed first. Categories don't count.", () => 64)
         {
             new ConfigKeyRange<int>(1, 128)
         };
 
-        private static readonly DefiningConfigKey<float> _searchRefreshDelayKey = new("SearchRefreshDelay", "Time to wait after search input change before refreshing the results. 0 to always refresh.", () => .75f)
+        private static readonly DefiningConfigKey<float> _searchRefreshDelay = new("SearchRefreshDelay", "Time to wait after search input change before refreshing the results. 0 to always refresh.", () => .75f)
         {
             new ConfigKeyQuantity<float, Time>(new UnitConfiguration("s", "0", " ", new [] {"s", "ms"}), null, 0, 2)
         };
 
-        private static readonly DefiningConfigKey<string> _userExcludedCategoriesKey = new("UserExcludedCategories", "Excludes specific categories from being searched into by path (case sensitive). Separate entries by semicolon. Search will work when started inside them.", () => "/ProtoFlux");
+        private static readonly DefiningConfigKey<string> _userExcludedCategories = new("UserExcludedCategories", "Excludes specific categories from being searched into by path (case sensitive). Separate entries by semicolon. Search will work when started inside them.", () => "/ProtoFlux");
         private static readonly char[] _userExclusionSeparator = new[] { ';' };
 
         /// <summary>
@@ -49,12 +49,12 @@ namespace ComponentSelectorAdditions
         /// <inheritdoc/>
         public override Version Version { get; } = new(1, 0, 0);
 
-        internal int MaxResultCount => _maxResultCountKey.GetValue();
-        internal int SearchRefreshDelay => (int)_searchRefreshDelayKey.GetValue();
+        internal int MaxResultCount => _maxResultCount;
+        internal int SearchRefreshDelay => (int)(1000 * _searchRefreshDelay);
 
         static SearchConfig()
         {
-            _userExcludedCategoriesKey.Changed += UserExcludedCategoriesChanged;
+            _userExcludedCategories.Changed += UserExcludedCategoriesChanged;
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace ComponentSelectorAdditions
             base.OnLoad(source, jsonSerializer);
 
             Instance = this;
-            LoadUserExcludedCategories(_userExcludedCategoriesKey.GetValue());
+            LoadUserExcludedCategories(_userExcludedCategories);
         }
 
         private static void LoadUserExcludedCategories(string? categoryList)
