@@ -40,4 +40,5 @@ Then all you have to do is placing the provided `ComponentSelectorAdditions.nupk
 ## Known Incompatibilities
 
 Obviously not compatible with Cyro's [CherryPick](https://github.com/BlueCyro/CherryPick).
-Also not compatible with TheJebForge's [TypePicker](https://github.com/TheJebForge/TypePicker) (https://github.com/ResoniteModdingGroup/ComponentSelectorAdditions/issues/3).
+
+Also not compatible with TheJebForge's [TypePicker](https://github.com/TheJebForge/TypePicker) - a ported version is available: https://github.com/ResoniteModdingGroup/TypePicker
