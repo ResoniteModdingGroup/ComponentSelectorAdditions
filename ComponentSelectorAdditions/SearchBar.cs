@@ -20,7 +20,7 @@ namespace ComponentSelectorAdditions
     {
         private static readonly char[] _searchSplits = new[] { ' ', ',', '+', '|' };
         public override bool CanBeDisabled => true;
-        public int Priority => HarmonyLib.Priority.HigherThanNormal;
+        public int Priority => HarmonyLib.Priority.VeryHigh;
 
         public bool SkipCanceled => true;
 

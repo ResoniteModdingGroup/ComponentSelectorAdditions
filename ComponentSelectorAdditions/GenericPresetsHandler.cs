@@ -19,7 +19,7 @@ namespace ComponentSelectorAdditions
         IEventHandler<BuildCustomGenericBuilder>, IEventHandler<EnumerateConcreteGenericsEvent>
     {
         public override bool CanBeDisabled => true;
-        public int Priority => HarmonyLib.Priority.Normal;
+        public int Priority => HarmonyLib.Priority.High;
 
         public void Handle(EnumerateConcreteGenericsEvent eventData)
         {
@@ -54,18 +54,7 @@ namespace ComponentSelectorAdditions
 
             foreach (var genericArgument in eventData.GenericArguments)
             {
-                var textField = ui.HorizontalElementWithLabel(genericArgument.Name, .05f, () =>
-                {
-                    var textField = ui.TextField(null, false, null, false);
-                    textField.Text.NullContent.AssignLocaleString(Mod.GetLocaleString("EnterType"));
-
-                    return textField;
-                }, out var label);
-
-                label.HorizontalAlign.Value = Elements.Assets.TextHorizontalAlignment.Center;
-
-                if (selector.GenericArgumentPrefiller.Target != null)
-                    textField.TargetString = selector.GenericArgumentPrefiller.Target(eventData.Component, genericArgument);
+                var textField = DefaultHandler.MakeGenericArgumentInput(ui, eventData.Component, genericArgument, selector.GenericArgumentPrefiller.Target);
 
                 selector._customGenericArguments.Add(textField);
             }

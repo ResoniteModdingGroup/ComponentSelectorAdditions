@@ -12,8 +12,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -250,27 +248,6 @@ namespace ComponentSelectorAdditions
             return false;
         }
 
-        private static IEnumerable<string> EnumerateParents<T>(CategoryNode<T>? start, CategoryNode<T>? end = null)
-        {
-            var current = start;
-
-            while (current is not null && current != end)
-            {
-                yield return current.Parent is null ? "" : current.Name;
-                current = current.Parent;
-            }
-        }
-
-        private static string? GetPrettyPath<T>(CategoryNode<T>? subCategory, CategoryNode<T>? rootCategory = null, string delimiter = " > ")
-        {
-            var segments = EnumerateParents(subCategory, rootCategory);
-
-            if (!segments.Any())
-                return null;
-
-            return segments.Reverse().Join(delimiter: delimiter) + delimiter.TrimEnd();
-        }
-
         private static SyncFieldEvent<string> MakeBuildUICall(ComponentSelector selector, SelectorData details)
         {
             return field =>
@@ -287,43 +264,12 @@ namespace ComponentSelectorAdditions
                     }
 
                     // Only refresh UI with search results if there was no further update immediately following it
-                    if (token.IsCancellationRequested || selector.IsDestroyed)
+                    if (token.IsCancellationRequested || selector.FilterWorldElement() is null)
                         return;
 
                     selector.BuildUI(details.CurrentPath.Path, false);
                 });
             };
-        }
-
-        private static void MakePermanentButton(UIBuilder ui, string? category, LocaleString name, colorX tint, ButtonEventHandler<string> callback, string argument)
-        {
-            ui.PushStyle();
-            ui.Style.MinHeight = category is not null ? 48 : 32;
-
-            var button = ui.Button(name, tint, callback, argument, .35f);
-
-            if (category is not null)
-            {
-                var buttonLabel = button.Label;
-                buttonLabel.ParseRichText.Value = false;
-                ui.NestInto(button.RectTransform);
-
-                var panel = ui.Panel();
-                panel.OffsetMin.Value = buttonLabel.RectTransform.OffsetMin;
-                panel.OffsetMax.Value = buttonLabel.RectTransform.OffsetMax;
-
-                ui.HorizontalHeader(18, out var header, out var content);
-
-                buttonLabel.Slot.Parent = content.Slot;
-                buttonLabel.RectTransform.OffsetMin.Value = new(16, 0);
-                buttonLabel.RectTransform.OffsetMax.Value = float2.Zero;
-
-                ui.NestInto(header);
-                var text = ui.Text(category, parseRTF: false);
-                text.Color.Value = RadiantUI_Constants.Neutrals.LIGHT;
-            }
-
-            ui.PopStyle();
         }
 
         private static void OnBuildCategoryButton(ComponentSelector selector, UIBuilder ui, CategoryNode<Type> rootCategory, CategoryNode<Type> subCategory)
@@ -336,12 +282,7 @@ namespace ComponentSelectorAdditions
             ui.NestInto(root);
 
             if (!eventData.Canceled)
-            {
-                ui.Button(
-                    GetPrettyPath(subCategory, rootCategory),
-                    RadiantUI_Constants.Sub.YELLOW, selector.OnOpenCategoryPressed, subCategory.GetPath(),
-                    0.35f).Label.ParseRichText.Value = false;
-            }
+                Logger.Warn(() => "No event handler handled building a category button!");
         }
 
         private static void OnBuildComponentButton(ComponentSelector selector, UIBuilder ui, SelectorPath path, CategoryNode<Type>? rootCategory, ComponentResult component)
@@ -354,16 +295,7 @@ namespace ComponentSelectorAdditions
             ui.NestInto(root);
 
             if (!eventData.Canceled)
-            {
-                var category = GetPrettyPath(component.Category, rootCategory);
-                var tint = component.IsGeneric ? RadiantUI_Constants.Sub.GREEN : RadiantUI_Constants.Sub.CYAN;
-                ButtonEventHandler<string> callback = component.IsGeneric ? selector.OpenGenericTypesPressed : selector.OnAddComponentPressed;
-                var argument = $"{(component.IsGeneric ? $"{path.Path}/{component.Type.AssemblyQualifiedName}" : selector.World.Types.EncodeType(component.Type))}{(component.IsGeneric && path.HasGroup ? $"?{path.Group}" : "")}";
-
-                MakePermanentButton(ui, category, component.NiceName, tint, callback, argument);
-            }
-
-            ui.NestInto(root);
+                Logger.Warn(() => "No event handler handled building a component button!");
         }
 
         private static BuildCustomGenericBuilder OnBuildCustomGenericBuilder(ComponentSelector selector, UIBuilder ui, Type component)
@@ -376,31 +308,13 @@ namespace ComponentSelectorAdditions
             ui.NestInto(root);
 
             if (!eventData.AddsGenericArgumentInputs)
-            {
-                foreach (var genericArgument in eventData.GenericArguments)
-                {
-                    var textField = ui.HorizontalElementWithLabel(genericArgument.Name, .05f, () =>
-                    {
-                        var textField = ui.TextField(null, false, null, false);
-                        textField.Text.NullContent.AssignLocaleString(Mod.GetLocaleString("EnterType"));
-
-                        return textField;
-                    }, out var label);
-
-                    label.HorizontalAlign.Value = Elements.Assets.TextHorizontalAlignment.Center;
-
-                    if (selector.GenericArgumentPrefiller.Target != null)
-                        textField.TargetString = selector.GenericArgumentPrefiller.Target(component, genericArgument);
-
-                    selector._customGenericArguments.Add(textField);
-                }
-            }
+                Logger.Warn(() => "No event handler handled adding generic argument inputs!");
 
             if (!eventData.AddsCreateCustomTypeButton)
-                eventData.CreateCustomTypeButton = ui.Button((LocaleString)string.Empty, RadiantUI_Constants.BUTTON_COLOR, selector.OnCreateCustomType, .35f);
+                Logger.Warn(() => "No event handler handled adding a create custom type button!");
 
-            selector._customGenericTypeLabel.Target = eventData.CreateCustomTypeButton.Label.Content;
-            selector._customGenericTypeColor.Target = eventData.CreateCustomTypeButton.BaseColor;
+            selector._customGenericTypeLabel.Target = eventData.CreateCustomTypeButton?.Label.Content;
+            selector._customGenericTypeColor.Target = eventData.CreateCustomTypeButton?.BaseColor;
 
             return eventData;
         }
@@ -427,15 +341,7 @@ namespace ComponentSelectorAdditions
             ui.NestInto(root);
 
             if (!eventData.Canceled)
-            {
-                var category = GetPrettyPath(groupComponent.Category, rootCategory);
-                var tint = RadiantUI_Constants.Sub.PURPLE;
-                var argument = $"{groupComponent.Category.GetPath()}:{groupComponent.Group}";
-
-                MakePermanentButton(ui, category, groupComponent.GroupName, tint, selector.OpenGroupPressed, argument);
-            }
-
-            ui.NestInto(root);
+                Logger.Warn(() => "No event handler handled building a group button!");
         }
 
         private static BuildSelectorHeaderEvent OnBuildHeader(ComponentSelector selector, UIBuilder ui)
@@ -456,11 +362,8 @@ namespace ComponentSelectorAdditions
 
             _enumerateCategories?.Invoke(eventData);
 
-            if (!eventData.Canceled && !path.HasGroup)
-            {
-                foreach (var subcategory in rootCategory.Subcategories)
-                    eventData.AddItem(subcategory);
-            }
+            if (!eventData.Canceled)
+                Logger.Warn(() => "No event handler handled enumerating sub-categories!");
 
             return eventData;
         }
@@ -472,10 +375,7 @@ namespace ComponentSelectorAdditions
             _enumerateComponents?.Invoke(eventData);
 
             if (!eventData.Canceled)
-            {
-                foreach (var type in category.Elements)
-                    eventData.AddItem(new ComponentResult(category, type));
-            }
+                Logger.Warn(() => "No event handler handled enumerating components!");
 
             return eventData;
         }
@@ -485,9 +385,6 @@ namespace ComponentSelectorAdditions
             var eventData = new EnumerateConcreteGenericsEvent(selector, component);
 
             _enumerateConcreteGenerics?.Invoke(eventData);
-
-            foreach (var concreteGeneric in WorkerInitializer.GetCommonGenericTypes(component))
-                eventData.AddItem(concreteGeneric);
 
             return eventData;
         }

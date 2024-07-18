@@ -32,7 +32,7 @@ namespace ComponentSelectorAdditions
 
         public override bool CanBeDisabled => true;
 
-        public int Priority => HarmonyLib.Priority.Normal;
+        public int Priority => HarmonyLib.Priority.High;
 
         public bool SkipCanceled => true;
 
