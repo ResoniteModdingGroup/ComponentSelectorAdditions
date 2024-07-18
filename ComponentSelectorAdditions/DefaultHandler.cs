@@ -15,6 +15,9 @@ using System.IO;
 
 namespace ComponentSelectorAdditions
 {
+    /// <summary>
+    /// Handles the default behavior for the <see cref="Injector"/> events.
+    /// </summary>
     public sealed class DefaultHandler : ConfiguredResoniteMonkey<DefaultHandler, DefaultConfig>,
         ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>,
         ICancelableEventHandler<BuildCategoryButtonEvent>, ICancelableEventHandler<BuildGroupButtonEvent>, ICancelableEventHandler<BuildComponentButtonEvent>,
@@ -26,6 +29,15 @@ namespace ComponentSelectorAdditions
         /// <inheritdoc/>
         public bool SkipCanceled => true;
 
+        /// <summary>
+        /// Formats the path from the <paramref name="rootCategory"/> to the <paramref name="subCategory"/>
+        /// or to its root prettily with the <paramref name="delimiter"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the <see cref="CategoryNode{T}"/>s.</typeparam>
+        /// <param name="subCategory">The category the path leads to.</param>
+        /// <param name="rootCategory">The root that the path starts from.</param>
+        /// <param name="delimiter">The string between the category names.</param>
+        /// <returns>The trimmed, path-like string.</returns>
         public static string? GetPrettyPath<T>(CategoryNode<T>? subCategory, CategoryNode<T>? rootCategory = null, string delimiter = " > ")
         {
             var segments = EnumerateParents(subCategory, rootCategory);
@@ -36,6 +48,14 @@ namespace ComponentSelectorAdditions
             return segments.Reverse().Join(delimiter: delimiter) + delimiter.TrimEnd();
         }
 
+        /// <summary>
+        /// Creates a labeled text field as a generic argument input.
+        /// </summary>
+        /// <param name="ui">The <see cref="UIBuilder"/> to use for the construction.</param>
+        /// <param name="component">The type that the generic argument input is for.</param>
+        /// <param name="genericArgument">The generic argument "type".</param>
+        /// <param name="genericArgumentPrefiller">The <see cref="ComponentSelector.GenericArgumentPrefiller"/> target.</param>
+        /// <returns>The labeled <see cref="TextField"/> that was created.</returns>
         public static TextField MakeGenericArgumentInput(UIBuilder ui, Type component, Type genericArgument, GenericArgumentPrefiller? genericArgumentPrefiller = null)
         {
             var textField = ui.HorizontalElementWithLabel(genericArgument.Name, .05f, () =>
@@ -54,7 +74,16 @@ namespace ComponentSelectorAdditions
             return textField;
         }
 
-        public static void MakePermanentButton(UIBuilder ui, string? category, LocaleString name, colorX tint, ButtonEventHandler<string> callback, string argument)
+        /// <summary>
+        /// Creates a labeled button that can optionally show a category path as well.
+        /// </summary>
+        /// <param name="ui">The <see cref="UIBuilder"/> to use for the construction.</param>
+        /// <param name="name">The label on the button.</param>
+        /// <param name="tint">The background color of the button.</param>
+        /// <param name="callback">The <see cref="ButtonEventHandler{T}"/> to call when the button is pressed.</param>
+        /// <param name="argument">The argument for the <paramref name="callback"/>.</param>
+        /// <param name="category">The optional category path to show.</param>
+        public static void MakePermanentButton(UIBuilder ui, LocaleString name, colorX tint, ButtonEventHandler<string> callback, string argument, string? category = null)
         {
             ui.PushStyle();
             ui.Style.MinHeight = category is not null ? ConfigSection.IndirectButtonHeight : ConfigSection.DirectButtonHeight;
@@ -79,8 +108,7 @@ namespace ComponentSelectorAdditions
                 buttonLabel.RectTransform.OffsetMax.Value = float2.Zero;
 
                 ui.NestInto(header);
-                var text = ui.Text(category, parseRTF: false);
-                //text.Color.Value = RadiantUI_Constants.Neutrals.LIGHT;
+                ui.Text(category, parseRTF: false);
             }
 
             ui.PopStyle();
@@ -113,7 +141,7 @@ namespace ComponentSelectorAdditions
             var tint = RadiantUI_Constants.Sub.PURPLE;
             var argument = $"{eventData.ItemCategory.GetPath()}:{eventData.Group}";
 
-            MakePermanentButton(eventData.UI, category, eventData.GroupName, tint, selector.OpenGroupPressed, argument);
+            MakePermanentButton(eventData.UI, eventData.GroupName, tint, selector.OpenGroupPressed, argument, category);
 
             eventData.Canceled = true;
         }
@@ -154,15 +182,14 @@ namespace ComponentSelectorAdditions
             ButtonEventHandler<string> callback = component.IsGeneric ? selector.OpenGenericTypesPressed : selector.OnAddComponentPressed;
             var argument = $"{(component.IsGeneric ? $"{path.Path}/{component.Type.AssemblyQualifiedName}" : selector.World.Types.EncodeType(component.Type))}{(component.IsGeneric && path.HasGroup ? $"?{path.Group}" : "")}";
 
-            MakePermanentButton(eventData.UI, category, component.NiceName, tint, callback, argument);
+            MakePermanentButton(eventData.UI, component.NiceName, tint, callback, argument, category);
 
             eventData.Canceled = true;
         }
 
         void ICancelableEventHandler<BuildCategoryButtonEvent>.Handle(BuildCategoryButtonEvent eventData)
         {
-            MakePermanentButton(eventData.UI, null,
-                GetPrettyPath(eventData.ItemCategory, eventData.RootCategory),
+            MakePermanentButton(eventData.UI, GetPrettyPath(eventData.ItemCategory, eventData.RootCategory),
                 RadiantUI_Constants.Sub.YELLOW,
                 eventData.Selector.OnOpenCategoryPressed,
                 eventData.ItemCategory.GetPath());

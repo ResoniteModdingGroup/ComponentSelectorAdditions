@@ -17,6 +17,9 @@
     "ComponentSelectorAdditions.RecentsCategories.Description": "Fügt 'Recents' Kategorien zu den Wurzelkategorien von Komponenten-Selektoren und ProtoFlux Nodebrowsern hinzu, welche die zuletzt Genutzten auflisten.",
     "ComponentSelectorAdditions.SearchBar.Description": "Fügt eine Suchleiste zu Komponenten-Selektoren hinzu, welche es erlaubt Komponenten und ProtoFlux Nodes zu suchen.",
 
+    "ComponentSelectorAdditions.Defaults.DirectButtonHeight.Description": "Die Höhe eines Buttons, der ein direktes Kind der aktuellen Kategorie als Ziel hat, in Canvas-Einheiten. Der Standardwert ist 32.",
+    "ComponentSelectorAdditions.Defaults.IndirectButtonHeight.Description": "Die Höhe eines Buttons, der kein direktes Kind der aktuellen Kategorie als Ziel hat und auch Platz für einen Kategoriepfad braucht, in Canvas-Einheiten. Der Standardwert ist 48.",
+
     "ComponentSelectorAdditions.Favorites.SortFavoriteCategoriesToTop.Description": "Sortiere favorisierte Kategorien über unfavorisierten.",
     "ComponentSelectorAdditions.Favorites.SortFavoriteComponentsToTop.Description": "Sortiere favorisierte Komponenten / Nodes über unfavorisierten.",
     "ComponentSelectorAdditions.Favorites.SortFavoriteConcreteGenericsToTop.Description": "Sortiere favorisierte konkrete Versionen von generischen Komponenten / Nodes über unfavorisierten.",

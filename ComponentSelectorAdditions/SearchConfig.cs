@@ -27,7 +27,7 @@ namespace ComponentSelectorAdditions
             new ConfigKeyRange<int>(1, 128)
         };
 
-        private static readonly DefiningConfigKey<float> _searchRefreshDelay = new("SearchRefreshDelay", "Time to wait after search input change before refreshing the results. 0 to always refresh.", () => .5f)
+        private static readonly DefiningConfigKey<float> _searchRefreshDelay = new("SearchRefreshDelay", "Time to wait after search input change before refreshing the results. 0 to always refresh.", () => .4f)
         {
             new ConfigKeyQuantity<float, Time>(new UnitConfiguration("s", "0", " ", new [] {"s", "ms"}), null, 0, 2)
         };
