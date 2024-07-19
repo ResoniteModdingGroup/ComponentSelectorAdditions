@@ -12,11 +12,11 @@ namespace ComponentSelectorAdditions.Events
     public abstract class BuildButtonEvent : CancelableBuildUIEvent
     {
         public bool IsDirectItem { get; }
-        public CategoryNode<Type> ItemCategory { get; }
+        public CategoryNode<Type>? ItemCategory { get; }
         public CategoryNode<Type>? RootCategory { get; }
         public ComponentSelector Selector { get; }
 
-        protected BuildButtonEvent(ComponentSelector selector, UIBuilder ui, CategoryNode<Type>? rootCategory, CategoryNode<Type> itemCategory, bool isDirectItem) : base(ui)
+        protected BuildButtonEvent(ComponentSelector selector, UIBuilder ui, CategoryNode<Type>? rootCategory, CategoryNode<Type>? itemCategory, bool isDirectItem) : base(ui)
         {
             Selector = selector;
             RootCategory = rootCategory;
