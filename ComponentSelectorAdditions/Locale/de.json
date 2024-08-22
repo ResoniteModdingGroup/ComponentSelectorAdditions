@@ -17,20 +17,20 @@
     "ComponentSelectorAdditions.RecentsCategories.Description": "Fügt 'Recents' Kategorien zu den Wurzelkategorien von Komponenten-Selektoren und ProtoFlux Nodebrowsern hinzu, welche die zuletzt Genutzten auflisten.",
     "ComponentSelectorAdditions.SearchBar.Description": "Fügt eine Suchleiste zu Komponenten-Selektoren hinzu, welche es erlaubt Komponenten und ProtoFlux Nodes zu suchen.",
 
-    "ComponentSelectorAdditions.Defaults.DirectButtonHeight.Description": "Die Höhe eines Buttons, der ein direktes Kind der aktuellen Kategorie als Ziel hat, in Canvas-Einheiten. Der Standardwert ist 32.",
-    "ComponentSelectorAdditions.Defaults.IndirectButtonHeight.Description": "Die Höhe eines Buttons, der kein direktes Kind der aktuellen Kategorie als Ziel hat und auch Platz für einen Kategoriepfad braucht, in Canvas-Einheiten. Der Standardwert ist 48.",
+    "ComponentSelectorAdditions.Config.Defaults.DirectButtonHeight.Description": "Die Höhe eines Buttons, der ein direktes Kind der aktuellen Kategorie als Ziel hat, in Canvas-Einheiten. Der Standardwert ist 32.",
+    "ComponentSelectorAdditions.Config.Defaults.IndirectButtonHeight.Description": "Die Höhe eines Buttons, der kein direktes Kind der aktuellen Kategorie als Ziel hat und auch Platz für einen Kategoriepfad braucht, in Canvas-Einheiten. Der Standardwert ist 48.",
 
-    "ComponentSelectorAdditions.Favorites.SortFavoriteCategoriesToTop.Description": "Sortiere favorisierte Kategorien über unfavorisierten.",
-    "ComponentSelectorAdditions.Favorites.SortFavoriteComponentsToTop.Description": "Sortiere favorisierte Komponenten / Nodes über unfavorisierten.",
-    "ComponentSelectorAdditions.Favorites.SortFavoriteConcreteGenericsToTop.Description": "Sortiere favorisierte konkrete Versionen von generischen Komponenten / Nodes über unfavorisierten.",
+    "ComponentSelectorAdditions.Config.Favorites.SortFavoriteCategoriesToTop.Description": "Sortiere favorisierte Kategorien über unfavorisierten.",
+    "ComponentSelectorAdditions.Config.Favorites.SortFavoriteComponentsToTop.Description": "Sortiere favorisierte Komponenten / Nodes über unfavorisierten.",
+    "ComponentSelectorAdditions.Config.Favorites.SortFavoriteConcreteGenericsToTop.Description": "Sortiere favorisierte konkrete Versionen von generischen Komponenten / Nodes über unfavorisierten.",
 
-    "ComponentSelectorAdditions.Recents.TrackedCapacity.Description": "Wie viele zuletzt genutzte Komponenten / Nodes gespeichert und angezeigt werden sollen.",
-    "ComponentSelectorAdditions.Recents.TrackConcreteComponents.Description": "Ob die konkreten Versionen von generischen Komponenten / Nodes gespeichert werden sollen.",
-    "ComponentSelectorAdditions.Recents.TrackGenericComponents.Description": "Ob die generischen Versionen von generischen Komponenten / Nodes gespeichert werden sollen.",
-    "ComponentSelectorAdditions.Recents.AddRecentConcreteComponentsToSelection.Description": "Sorgt dafür, dass die zuletzt genutzten konkreten Versionen von generischen Komponenten / Nodes in der Auswahl auftauchen.",
+    "ComponentSelectorAdditions.Config.Recents.TrackedCapacity.Description": "Wie viele zuletzt genutzte Komponenten / Nodes gespeichert und angezeigt werden sollen.",
+    "ComponentSelectorAdditions.Config.Recents.TrackConcreteComponents.Description": "Ob die konkreten Versionen von generischen Komponenten / Nodes gespeichert werden sollen.",
+    "ComponentSelectorAdditions.Config.Recents.TrackGenericComponents.Description": "Ob die generischen Versionen von generischen Komponenten / Nodes gespeichert werden sollen.",
+    "ComponentSelectorAdditions.Config.Recents.AddRecentConcreteComponentsToSelection.Description": "Sorgt dafür, dass die zuletzt genutzten konkreten Versionen von generischen Komponenten / Nodes in der Auswahl auftauchen.",
 
-    "ComponentSelectorAdditions.Search.MaxResultCount.Description": "Die maximale Anzahl von Komponenten- / Node-Ergebnissen die angezeigt werden soll. 'Bessere' Ergebnisse werden zuerst angezeigt. Kategorien zählen nicht.",
-    "ComponentSelectorAdditions.Search.SearchRefreshDelay.Description": "Wie lange nach einer Änderung der Suchanfrage gewartet wird bevor die Ergebnisse erneuert werden. 0 um immer sofort neu zu suchen.",
-    "ComponentSelectorAdditions.Search.UserExcludedCategories.Description": "Schließt bestimmte Kategorien basierend auf ihrem Pfad (Groß- / Kleinschreibung beachten) davon aus in sie hinein zu suchen. Einträge mit einem Semikolon trennen. Die Suche innerhalb der Kategorien funktioniert trotzdem."
+    "ComponentSelectorAdditions.Config.Search.MaxResultCount.Description": "Die maximale Anzahl von Komponenten- / Node-Ergebnissen die angezeigt werden soll. 'Bessere' Ergebnisse werden zuerst angezeigt. Kategorien zählen nicht.",
+    "ComponentSelectorAdditions.Config.Search.SearchRefreshDelay.Description": "Wie lange nach einer Änderung der Suchanfrage gewartet wird bevor die Ergebnisse erneuert werden. 0 um immer sofort neu zu suchen.",
+    "ComponentSelectorAdditions.Config.Search.UserExcludedCategories.Description": "Schließt bestimmte Kategorien basierend auf ihrem Pfad (Groß- / Kleinschreibung beachten) davon aus in sie hinein zu suchen. Einträge mit einem Semikolon trennen. Die Suche innerhalb der Kategorien funktioniert trotzdem."
   }
 }

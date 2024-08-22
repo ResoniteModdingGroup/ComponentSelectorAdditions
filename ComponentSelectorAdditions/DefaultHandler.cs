@@ -139,7 +139,7 @@ namespace ComponentSelectorAdditions
 
             var category = GetPrettyPath(eventData.ItemCategory, eventData.RootCategory);
             var tint = RadiantUI_Constants.Sub.PURPLE;
-            var argument = $"{eventData.ItemCategory.GetPath()}:{eventData.Group}";
+            var argument = $"{eventData.ItemCategory!.GetPath()}:{eventData.Group}";
 
             MakePermanentButton(eventData.UI, eventData.GroupName, tint, selector.OpenGroupPressed, argument, category);
 
@@ -192,7 +192,7 @@ namespace ComponentSelectorAdditions
             MakePermanentButton(eventData.UI, GetPrettyPath(eventData.ItemCategory, eventData.RootCategory),
                 RadiantUI_Constants.Sub.YELLOW,
                 eventData.Selector.OnOpenCategoryPressed,
-                eventData.ItemCategory.GetPath());
+                eventData.ItemCategory!.GetPath());
 
             eventData.Canceled = true;
         }

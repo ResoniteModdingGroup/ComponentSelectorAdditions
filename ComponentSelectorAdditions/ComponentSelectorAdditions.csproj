@@ -30,13 +30,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonkeyLoader" Version="0.19.1-beta" />
-    <PackageReference Include="MonkeyLoader.GamePacks.Resonite" Version="0.17.0-beta" />
+    <PackageReference Include="MonkeyLoader" Version="0.21.0-beta" />
+    <PackageReference Include="MonkeyLoader.GamePacks.Resonite" Version="0.18.0-beta-pre1" />
     <PackageReference Include="PolySharp" Version="1.14.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Resonite.Elements.Core" Version="1.2.0" />
-    <PackageReference Include="Resonite.FrooxEngine" Version="2024.7.19.281" />
+    <PackageReference Include="Resonite.FrooxEngine" Version="2024.7.25.1284" />
   </ItemGroup>
 </Project>
