@@ -1,0 +1,18 @@
+{
+  "localeCode": "it",
+  "authors": [ "E1int" ],
+  "messages": {
+    "ComponentSelectorAdditions.Search": "<i>Cerca ...</i>",
+    "ComponentSelectorAdditions.EnterType": "<i>Inserisci Tipo ...</i>",
+    
+    "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Aggiunge un indicatore per il percorso attuale della categoria (e del tipo generico) ai selettori di componente.",
+    "ComponentSelectorAdditions.DefaultHandler.Description": "Gestisce il comportamento predefinito degli eventi dell'iniettore a priorità normale.",
+    "ComponentSelectorAdditions.FavoritesCategories.Description": "Aggiunge le categorie 'Preferiti' ai selettori di componente e alle radici del browser di nodi ProtoFlux, rendendo categorie e componenti / nodi favorizzabili.",
+    "ComponentSelectorAdditions.FixedBackButton.Description": "Posiziona il pulsante 'Indietro' nei selettori di componente al di fuori della zona scrollabile.",
+    "ComponentSelectorAdditions.FixedCancelButton.Description": "Posiziona il pulsante 'Cancella' nei selettori di componente al di fuori della zona scrollabile.",
+    "ComponentSelectorAdditions.GenericPresetsHandler.Description": "Consente di salvare gli argomenti di tipo generico personalizzati come preset, i quali verranno aggiunti alla lista dei tipi generici comuni in qualsiasi componente / nodo valido.",
+    "ComponentSelectorAdditions.Injector.Description": "Rende la generazione e l'elenco del selettore di componenti modulare gestendoli attraverso eventi.",
+    "ComponentSelectorAdditions.RecentsCategories.Description": "Aggiunge le categorie 'Recenti' ai selettori di componenti e alle radici del browser di nodi ProtoFlux, mostrando quelli usati di recente.",
+    "ComponentSelectorAdditions.SearchBar.Description": "Aggiunge una barra di ricerca al selettore di componenti, la quale permette di cercare componenti e nodi ProtoFlux."
+  }
+}
