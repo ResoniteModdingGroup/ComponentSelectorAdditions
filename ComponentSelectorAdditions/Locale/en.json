@@ -5,6 +5,7 @@
     "ComponentSelectorAdditions.Search": "<i>Search ...</i>",
     "ComponentSelectorAdditions.EnterType": "<i>Enter Type ...</i>",
 
+    "ComponentSelectorAdditions.CaseSensitivityFix.Description": "Makes picking custom generic type parameters case-insensitive. Can be disabled when the bug gets fixed.",
     "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Adds an indicator for the current category (and generic Type) path to omponent selectors.",
     "ComponentSelectorAdditions.DefaultHandler.Description": "Handles the default behavior for the events of the Injector at normal priority.",
     "ComponentSelectorAdditions.FavoritesCategories.Description": "Adds 'Favorites' categories to Component selectors and ProtoFlux Node browser roots and makes categories and components / nodes favoritable.",

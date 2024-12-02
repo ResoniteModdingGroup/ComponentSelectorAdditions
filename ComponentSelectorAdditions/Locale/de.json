@@ -7,6 +7,7 @@
     "ComponentSelectorAdditions.Search": "<i>Suchen ...</i>",
     "ComponentSelectorAdditions.EnterType": "<i>Typ eingeben...</i>",
 
+    "ComponentSelectorAdditions.CaseSensitivityFix.Description": "Macht das Auswählen von eigenen generischen Typparametern unabhängig von Groß- und Kleinschreibung. Kann deaktiviert werden, wenn der Bug behoben wurde.",
     "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Fügt eine Anzeige für den Pfad der aktuellen Kategorie (und des generischen Typs) zu Komponenten-Selektoren hinzu.",
     "ComponentSelectorAdditions.DefaultHandler.Description": "Führt das Standardverhalten für die Events des Injectors mit normaler Priorität aus.",
     "ComponentSelectorAdditions.FavoritesCategories.Description": "Fügt 'Favorites' Kategorien zu den Wurzelkategorien von Komponenten-Selektoren und ProtoFlux Nodebrowsern hinzu und macht Kategorien und Komponenten / Nodes favorisierbar.",
