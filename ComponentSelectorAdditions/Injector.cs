@@ -107,7 +107,7 @@ namespace ComponentSelectorAdditions
 
                     if (rootCategory is null)
                     {
-                        selector._rootPath.Value = null;
+                        selector._rootPath.Value = null!;
                         selectorData.CurrentPath = new SelectorPath("/", selectorData.CurrentPath.Search, false, null, true);
                         rootCategory = WorkerInitializer.ComponentLibrary;
                     }
@@ -224,7 +224,7 @@ namespace ComponentSelectorAdditions
 
             __instance._uiRoot.Target.DestroyChildren();
             __instance._customGenericArguments.Clear();
-            __instance._genericType.Value = null;
+            __instance._genericType.Value = null!;
 
             var ui = SetupStyle(new UIBuilder(__instance._uiRoot.Target));
 
@@ -314,8 +314,8 @@ namespace ComponentSelectorAdditions
             if (!eventData.AddsCreateCustomTypeButton)
                 Logger.Warn(() => "No event handler handled adding a create custom type button!");
 
-            selector._customGenericTypeLabel.Target = eventData.CreateCustomTypeButton?.Label.Content;
-            selector._customGenericTypeColor.Target = eventData.CreateCustomTypeButton?.BaseColor;
+            selector._customGenericTypeLabel.Target = eventData.CreateCustomTypeButton?.Label.Content!;
+            selector._customGenericTypeColor.Target = eventData.CreateCustomTypeButton?.BaseColor!;
 
             return eventData;
         }
@@ -465,7 +465,7 @@ namespace ComponentSelectorAdditions
             if (selectorData.HasSearchBar)
                 selectorData.SearchBar.Text.Content.OnValueChange += MakeBuildUICall(__instance, selectorData);
 
-            __instance.BuildUI(null);
+            __instance.BuildUI(null!);
 
             return false;
         }

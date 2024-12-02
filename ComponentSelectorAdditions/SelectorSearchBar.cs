@@ -33,7 +33,7 @@ namespace ComponentSelectorAdditions
         public string? Content
         {
             get => Active ? Text.Content.Value : null;
-            set => Text.Content.Value = value;
+            set => Text.Content.Value = value!;
         }
 
         /// <summary>

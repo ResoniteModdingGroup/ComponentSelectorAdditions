@@ -18,6 +18,7 @@ namespace ComponentSelectorAdditions
     internal sealed class SearchBar : ConfiguredResoniteMonkey<SearchBar, SearchConfig>, IEventHandler<BuildSelectorHeaderEvent>,
         ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>
     {
+        private const string ProtoFluxPath = "/ProtoFlux/Runtimes/Execution/Nodes";
         private static readonly char[] _searchSplits = new[] { ' ', ',', '+', '|' };
         public override bool CanBeDisabled => true;
         public int Priority => HarmonyLib.Priority.VeryHigh;
@@ -39,7 +40,7 @@ namespace ComponentSelectorAdditions
             searchLayout.DestroyWhenLocalUserLeaves();
 
             ui.Style.FlexibleWidth = 1;
-            var textField = ui.TextField(null, parseRTF: false);
+            var textField = ui.TextField(null!, parseRTF: false);
             var details = new SelectorSearchBar(searchLayout, textField.Editor.Target, () => ConfigSection.SearchRefreshDelay);
             eventData.SearchBar = details;
 
@@ -48,7 +49,10 @@ namespace ComponentSelectorAdditions
 
             ui.Style.FlexibleWidth = -1;
             ui.Style.ButtonTextAlignment = Alignment.MiddleCenter;
-            ui.LocalActionButton("∅", _ => details.Content = null);
+
+            var clearButton = ui.Button("∅");
+            var clearAction = clearButton.Slot.AttachComponent<ButtonValueSet<string>>();
+            clearAction.TargetValue.Target = details.Text.Content;
 
             ui.PopStyle();
             ui.NestOut();
@@ -56,12 +60,12 @@ namespace ComponentSelectorAdditions
 
         public void Handle(EnumerateCategoriesEvent eventData)
         {
-            if (!eventData.Path.HasSearch || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
+            if (!eventData.Path.HasSearch || ((eventData.Path.IsSelectorRoot || ConfigSection.AlwaysSearchRoot) && eventData.Path.Search.Length < 3))
                 return;
 
             var search = eventData.Path.Search.Split(_searchSplits, StringSplitOptions.RemoveEmptyEntries);
 
-            foreach (var category in SearchCategories(eventData.RootCategory, search))
+            foreach (var category in SearchCategories(PickSearchCategory(eventData), search))
                 eventData.AddItem(category);
 
             eventData.Canceled = true;
@@ -73,10 +77,12 @@ namespace ComponentSelectorAdditions
                 return;
 
             var search = eventData.Path.Search.Split(_searchSplits, StringSplitOptions.RemoveEmptyEntries);
-            var results = eventData.RootCategory.Elements
-                .Select(type => (Category: eventData.RootCategory, Type: type, Matches: SearchContains(type.Name, search)))
+            var searchCategory = PickSearchCategory(eventData);
+
+            var results = searchCategory.Elements
+                .Select(type => (Category: searchCategory, Type: type, Matches: SearchContains(type.Name, search)))
                 .Concat(
-                    SearchCategories(eventData.RootCategory)
+                    SearchCategories(searchCategory)
                     .SelectMany(category => category.Elements
                         .Select(type => (Category: category, Type: type, Matches: SearchContains(type.Name, search)))))
                 .Where(match => match.Matches > 0)
@@ -141,5 +147,16 @@ namespace ComponentSelectorAdditions
 
         private static int SearchContains(string haystack, string[] needles)
             => needles.Count(needle => CultureInfo.InvariantCulture.CompareInfo.IndexOf(haystack, needle, CompareOptions.IgnoreCase) >= 0);
+
+        private CategoryNode<Type> PickSearchCategory(IEnumerateSelectorResultEvent eventData)
+        {
+            var isProtoFlux = eventData.Path.Path.StartsWith(ProtoFluxPath);
+
+            return ConfigSection.AlwaysSearchRoot
+                ? (isProtoFlux
+                    ? WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxPath)
+                    : WorkerInitializer.ComponentLibrary)
+                : eventData.RootCategory;
+        }
     }
 }

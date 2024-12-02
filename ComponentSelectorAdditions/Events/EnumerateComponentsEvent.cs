@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ComponentSelectorAdditions.Events
 {
-    public sealed class EnumerateComponentsEvent : CancelableSortedItemsEvent<ComponentResult>
+    public sealed class EnumerateComponentsEvent : CancelableSortedItemsEvent<ComponentResult>, IEnumerateSelectorResultEvent
     {
         public Predicate<Type> ComponentFilter { get; }
 

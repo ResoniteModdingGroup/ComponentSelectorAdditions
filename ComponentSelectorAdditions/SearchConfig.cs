@@ -20,6 +20,7 @@ namespace ComponentSelectorAdditions
     /// </summary>
     public sealed class SearchConfig : ConfigSection
     {
+        private static readonly DefiningConfigKey<bool> _alwaysSearchRoot = new("AlwaysSearchRoot", "Always starts searching from the root category, regardless of the current one.", () => false);
         private static readonly Dictionary<string, bool> _excludedCategories = new(StringComparer.OrdinalIgnoreCase);
 
         private static readonly DefiningConfigKey<int> _maxResultCount = new("MaxResultCount", "The maximum number of component / node results to display. 'Better' results are listed first. Categories don't count.", () => 64)
@@ -49,6 +50,7 @@ namespace ComponentSelectorAdditions
         /// <inheritdoc/>
         public override Version Version { get; } = new(1, 0, 0);
 
+        internal bool AlwaysSearchRoot => _alwaysSearchRoot;
         internal int MaxResultCount => _maxResultCount;
         internal int SearchRefreshDelay => (int)(1000 * _searchRefreshDelay);
 

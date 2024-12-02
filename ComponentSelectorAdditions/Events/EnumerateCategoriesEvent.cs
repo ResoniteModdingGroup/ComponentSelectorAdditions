@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ComponentSelectorAdditions.Events
 {
-    public sealed class EnumerateCategoriesEvent : CancelableSortedItemsEvent<CategoryNode<Type>>
+    public sealed class EnumerateCategoriesEvent : CancelableSortedItemsEvent<CategoryNode<Type>>, IEnumerateSelectorResultEvent
     {
         public override IEnumerable<CategoryNode<Type>> Items
             => sortableItems.OrderBy(entry => entry.Value)
