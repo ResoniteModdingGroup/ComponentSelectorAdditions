@@ -116,7 +116,17 @@ namespace ComponentSelectorAdditions
 
         void ICancelableEventHandler<EnumerateComponentsEvent>.Handle(EnumerateComponentsEvent eventData)
         {
-            foreach (var type in eventData.RootCategory.Elements)
+            var types = eventData.RootCategory.Elements;
+
+            if (eventData.Path.HasGroup)
+            {
+                static IEnumerable<Type> GetAllSubElements(CategoryNode<Type> category)
+                    => category.Elements.Concat(category.Subcategories.SelectMany(GetAllSubElements));
+
+                types = GetAllSubElements(eventData.RootCategory);
+            }
+
+            foreach (var type in types)
                 eventData.AddItem(new ComponentResult(eventData.RootCategory, type));
 
             eventData.Canceled = true;
@@ -139,7 +149,7 @@ namespace ComponentSelectorAdditions
 
             var category = GetPrettyPath(eventData.ItemCategory, eventData.RootCategory);
             var tint = RadiantUI_Constants.Sub.PURPLE;
-            var argument = $"{eventData.ItemCategory!.GetPath()}:{eventData.Group}";
+            var argument = $"{eventData.RootCategory!.GetPath()}:{eventData.Group}";
 
             MakePermanentButton(eventData.UI, eventData.GroupName, tint, selector.OpenGroupPressed, argument, category);
 
