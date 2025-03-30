@@ -18,9 +18,10 @@ namespace ComponentSelectorAdditions
     /// Use the <see cref="AddExcludedCategory(string)"/> and <see cref="RemoveExcludedCategory(string)"/>
     /// methods to add categories which shouldn't be searched into because they're added.
     /// </summary>
-    public sealed class SearchConfig : ConfigSection
+    public sealed class SearchConfig : SingletonConfigSection<SearchConfig>
     {
         private static readonly DefiningConfigKey<bool> _alwaysSearchRoot = new("AlwaysSearchRoot", "Always starts searching from the root category, regardless of the current one.", () => false);
+
         private static readonly Dictionary<string, bool> _excludedCategories = new(StringComparer.OrdinalIgnoreCase);
 
         private static readonly DefiningConfigKey<int> _maxResultCount = new("MaxResultCount", "The maximum number of component / node results to display. 'Better' results are listed first. Categories don't count.", () => 64)
@@ -37,9 +38,9 @@ namespace ComponentSelectorAdditions
         private static readonly char[] _userExclusionSeparator = new[] { ';' };
 
         /// <summary>
-        /// Gets this config's instance.
+        /// Gets whether the search always searches from the root category of the component selector / node browser.
         /// </summary>
-        public static SearchConfig Instance { get; private set; } = null!;
+        public bool AlwaysSearchRoot => _alwaysSearchRoot;
 
         /// <inheritdoc/>
         public override string Description => "Contains settings for the Component Selector Search.";
@@ -47,12 +48,18 @@ namespace ComponentSelectorAdditions
         /// <inheritdoc/>
         public override string Id => "Search";
 
+        /// <summary>
+        /// Gets how many results will be listed at most.
+        /// </summary>
+        public int MaxResultCount => _maxResultCount;
+
+        /// <summary>
+        /// Gets how many milliseconds to wait after the last change in the search input before actually searching.
+        /// </summary>
+        public int SearchRefreshDelay => (int)(1000 * _searchRefreshDelay);
+
         /// <inheritdoc/>
         public override Version Version { get; } = new(1, 0, 0);
-
-        internal bool AlwaysSearchRoot => _alwaysSearchRoot;
-        internal int MaxResultCount => _maxResultCount;
-        internal int SearchRefreshDelay => (int)(1000 * _searchRefreshDelay);
 
         static SearchConfig()
         {
@@ -60,27 +67,33 @@ namespace ComponentSelectorAdditions
         }
 
         /// <summary>
-        /// Creates an instance of this config once.
+        /// Adds the given category path as an excluded category for searches.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        public SearchConfig()
-        {
-            if (Instance is not null)
-                throw new InvalidOperationException();
-
-            Instance = this;
-        }
-
+        /// <remarks>
+        /// This should be used to exclude any categories added by mods.
+        /// Make sure to <see cref="RemoveExcludedCategory">remove</see> them again when being shutdown without the application being exited.<br/>
+        /// Searching <i>inside</i> of them is still possible.
+        /// </remarks>
+        /// <param name="category">The path of the category to exclude. Must not be null or whitespace.</param>
+        /// <returns><c>true</c> if the category is excluded now; otherwise, <c>false</c>.</returns>
         public bool AddExcludedCategory(string category)
         {
             if (string.IsNullOrWhiteSpace(category))
                 return false;
 
-            _excludedCategories[category] = false;
+            // Don't override user status of already excluded category
+            if (!HasExcludedCategory(category))
+                _excludedCategories[category] = false;
 
             return true;
         }
 
+        /// <summary>
+        /// Checks whether the given category path is an excluded category for searches.
+        /// </summary>
+        /// <param name="category">The path of the category to check.</param>
+        /// <param name="isUserCategory">Whether the excluded category was added by the user if it is excluded; otherwise, <c>null</c>.</param>
+        /// <returns><c>true</c> if the given category is excluded; otherwise, <c>false</c>.</returns>
         public bool HasExcludedCategory(string category, [NotNullWhen(true)] out bool? isUserCategory)
         {
             if (_excludedCategories.TryGetValue(category, out var userCategory))
@@ -93,9 +106,20 @@ namespace ComponentSelectorAdditions
             return false;
         }
 
+        /// <inheritdoc cref="HasExcludedCategory(string, out bool?)"/>
         public bool HasExcludedCategory(string category)
             => _excludedCategories.ContainsKey(category);
 
+        /// <summary>
+        /// Removes the given category path from being an excluded category for searches,
+        /// if it wasn't added by the user.
+        /// </summary>
+        /// <remarks>
+        /// This should be used to remove any excluded categories added by mods again
+        /// when they're being shutdown without the application being exited.
+        /// </remarks>
+        /// <param name="category">The path of the category to remove from being excluded. Must not be null or whitespace.</param>
+        /// <returns><c>true</c> if the category is not excluded anymore; otherwise, <c>false</c>.</returns>
         public bool RemoveExcludedCategory(string category)
         {
             if (!_excludedCategories.TryGetValue(category, out var userCategory))
@@ -114,7 +138,6 @@ namespace ComponentSelectorAdditions
         {
             base.OnLoad(source, jsonSerializer);
 
-            Instance = this;
             LoadUserExcludedCategories(_userExcludedCategories);
         }
 
