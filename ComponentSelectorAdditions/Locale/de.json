@@ -2,6 +2,7 @@
   "localeCode": "de",
   "authors": [ "Banane9" ],
   "messages": {
+    "ComponentSelectorAdditions.Name": "Komponenten-Selektor Ergänzungen",
     "ComponentSelectorAdditions.Description": "Dieser MonkeyLoader Mod für Resonite strukturiert Komponenten-Selektoren und ProtoFlux Nodebrowser neu und fügt eine Suchfunktion sowie Kategorien für zuletzt genutzte und favorisierte Komponenten / Nodes hinzu.",
 
     "ComponentSelectorAdditions.Search": "<i>Suchen ...</i>",

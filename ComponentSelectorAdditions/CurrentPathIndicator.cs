@@ -41,6 +41,6 @@ namespace ComponentSelectorAdditions
             => path.Replace("/", "/\u200b").Replace(".", ".\u200b");
 
         private static string Format(SelectorPath path)
-            => $"{path.Path}{(path.HasGroup ? $"{(path.GenericType ? ":" : "?")}{path.Group}" : "")}";
+            => $"{path.Path}{(path.HasGroup ? $"{(path.GenericType ? "?" : ":")}{path.Group}" : "")}";
     }
 }

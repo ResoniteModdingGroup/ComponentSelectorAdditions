@@ -83,7 +83,8 @@ namespace ComponentSelectorAdditions
         /// <param name="callback">The <see cref="ButtonEventHandler{T}"/> to call when the button is pressed.</param>
         /// <param name="argument">The argument for the <paramref name="callback"/>.</param>
         /// <param name="category">The optional category path to show.</param>
-        public static void MakePermanentButton(UIBuilder ui, LocaleString name, colorX tint, ButtonEventHandler<string> callback, string argument, string? category = null)
+        /// <param name="nonLocalArgument">The optional override for the <paramref name="argument"/> parameter on other users than the local one.</param>
+        public static void MakePermanentButton(UIBuilder ui, LocaleString name, colorX tint, ButtonEventHandler<string> callback, string argument, string? category = null, string? nonLocalArgument = null)
         {
             ui.PushStyle();
             ui.Style.MinHeight = category is not null ? ConfigSection.IndirectButtonHeight : ConfigSection.DirectButtonHeight;
@@ -91,8 +92,14 @@ namespace ComponentSelectorAdditions
             ui.HorizontalLayout(4, 0, Alignment.MiddleCenter);
             ui.Style.FlexibleWidth = 1;
 
-            var button = ui.Button(name, tint, callback, argument, .35f);
+            var button = ui.Button(name, tint, callback, nonLocalArgument ?? argument, .35f);
             button.Label.ParseRichText.Value = false;
+
+            if (nonLocalArgument is not null)
+            {
+                var relay = button.Slot.GetComponent<ButtonRelay<string>>();
+                relay.Argument.OverrideForUser(button.LocalUser, argument);
+            }
 
             if (category is not null)
             {
@@ -152,8 +159,9 @@ namespace ComponentSelectorAdditions
             var category = GetPrettyPath(eventData.ItemCategory, eventData.RootCategory);
             var tint = RadiantUI_Constants.Sub.PURPLE;
             var argument = $"{eventData.RootCategory!.GetPath()}:{eventData.Group}";
+            var nonLocalArgument = $"{eventData.ItemCategory!.GetPath()}:{eventData.Group}";
 
-            MakePermanentButton(eventData.UI, eventData.GroupName, tint, selector.OpenGroupPressed, argument, category);
+            MakePermanentButton(eventData.UI, eventData.GroupName, tint, selector.OpenGroupPressed, argument, category, nonLocalArgument);
 
             eventData.Canceled = true;
         }
