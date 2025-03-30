@@ -1,5 +1,4 @@
 ﻿using ComponentSelectorAdditions.Events;
-using Elements.Core;
 using FrooxEngine;
 using FrooxEngine.UIX;
 using MonkeyLoader.Events;
@@ -179,32 +178,26 @@ namespace ComponentSelectorAdditions
         private static void AddFavoriteButton(UIBuilder builder, Button button, bool isComponent,
             Func<TypeManager, string, bool> isFavorite, Func<TypeManager, string, bool> toggleFavorite)
         {
+            builder.PushStyle();
+
             var types = button.World.Types;
             builder.NestInto(button.Slot.Parent);
 
-            var height = button.Slot.GetComponent<LayoutElement>().MinHeight;
-            builder.Style.MinHeight = height;
-
-            var panel = builder.Panel();
-            builder.VerticalFooter(height + 4, out var footer, out var content);
-
-            button.Slot.Parent = content.Slot;
-            panel.Slot.OrderOffset = button.Slot.OrderOffset;
-            button.Slot.OrderOffset = 0;
-
-            footer.OffsetMin.Value += new float2(4, 0);
-            builder.NestInto(footer);
+            var height = button.Slot.Parent.GetComponent<LayoutElement>().MinHeight;
+            builder.Style.MinWidth = height;
 
             var name = button.Slot.GetComponent<ButtonRelay<string>>().Argument.Value;
             if (isComponent)
             {
                 var lastSlashIndex = name.LastIndexOf('/');
-                name = name.Substring(lastSlashIndex + 1);
+                name = name[(lastSlashIndex + 1)..];
             }
 
             var favColor = isFavorite(types, name) ? RadiantUI_Constants.Hero.YELLOW : RadiantUI_Constants.Neutrals.DARKLIGHT;
 
             var favoriteButton = builder.Button(OfficialAssets.Graphics.Icons.World_Categories.FeaturedRibbon, RadiantUI_Constants.BUTTON_COLOR, favColor);
+            favoriteButton.Slot.OrderOffset = 1;
+
             var icon = favoriteButton.Slot.GetComponentsInChildren<Image>().Last();
 
             favoriteButton.LocalPressed += (btn, btnEvent) =>
@@ -214,6 +207,8 @@ namespace ComponentSelectorAdditions
 
                 Config.Save();
             };
+
+            builder.PopStyle();
         }
 
         private static bool ToggleHashSetContains<T>(ISet<T> set, T value)

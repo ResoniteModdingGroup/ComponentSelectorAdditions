@@ -60,7 +60,7 @@ namespace ComponentSelectorAdditions
         {
             var textField = ui.HorizontalElementWithLabel(genericArgument.Name, .05f, () =>
             {
-                var textField = ui.TextField(null, false, null, false);
+                var textField = ui.TextField(parseRTF: false);
                 textField.Text.NullContent.AssignLocaleString(Mod.GetLocaleString("EnterType"));
 
                 return textField;
@@ -88,13 +88,15 @@ namespace ComponentSelectorAdditions
             ui.PushStyle();
             ui.Style.MinHeight = category is not null ? ConfigSection.IndirectButtonHeight : ConfigSection.DirectButtonHeight;
 
+            ui.HorizontalLayout(4, 0, Alignment.MiddleCenter);
+            ui.Style.FlexibleWidth = 1;
+
             var button = ui.Button(name, tint, callback, argument, .35f);
             button.Label.ParseRichText.Value = false;
 
             if (category is not null)
             {
                 var buttonLabel = button.Label;
-                buttonLabel.ParseRichText.Value = false;
                 ui.NestInto(button.RectTransform);
 
                 var panel = ui.Panel();
