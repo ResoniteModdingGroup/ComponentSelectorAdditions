@@ -18,6 +18,8 @@ namespace ComponentSelectorAdditions
             new ConfigKeyRange<float>(32, 64)
         };
 
+        private static readonly DefiningConfigKey<bool> _useSeparateConcreteGenericColor = new("UseSeparateConcreteGenericColor", "Use a blend between the generic component buttons' green and the non-generic component buttons' cyan for concrete generics.", () => true);
+
         /// <summary>
         /// Gets this config's instance.
         /// </summary>
@@ -40,6 +42,11 @@ namespace ComponentSelectorAdditions
         /// </summary>
         /// <value>The height in canvas units.</value>
         public float IndirectButtonHeight => _indirectButtonHeight;
+
+        /// <summary>
+        /// Gets whether to use a blend between the generic component buttons' green and the non-generic component buttons' cyan for concrete generics.
+        /// </summary>
+        public bool UseSeperateConcreteGenericColor => _useSeparateConcreteGenericColor;
 
         /// <inheritdoc/>
         public override Version Version { get; } = new Version(1, 0, 0);

@@ -3,7 +3,6 @@ using Elements.Core;
 using FrooxEngine;
 using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
-using MonkeyLoader.Resonite.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +11,7 @@ using System.Threading.Tasks;
 using MonkeyLoader.Events;
 using System.Threading;
 using System.Globalization;
+using MonkeyLoader;
 
 namespace ComponentSelectorAdditions
 {
@@ -19,8 +19,9 @@ namespace ComponentSelectorAdditions
         ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>
     {
         private const string ProtoFluxPath = "/ProtoFlux/Runtimes/Execution/Nodes";
-        private static readonly char[] _searchSplits = new[] { ' ', ',', '+', '|' };
+
         public override bool CanBeDisabled => true;
+
         public int Priority => HarmonyLib.Priority.VeryHigh;
 
         public bool SkipCanceled => true;
@@ -60,12 +61,10 @@ namespace ComponentSelectorAdditions
 
         public void Handle(EnumerateCategoriesEvent eventData)
         {
-            if (!eventData.Path.HasSearch || ((eventData.Path.IsSelectorRoot || ConfigSection.AlwaysSearchRoot) && eventData.Path.Search.Length < 3))
+            if (!eventData.Path.HasSearch || ((eventData.Path.IsSelectorRoot || ConfigSection.AlwaysSearchRoot) && eventData.Path.Search.Length < 3 && eventData.Path.SearchFragments.Length > 0))
                 return;
 
-            var search = eventData.Path.Search.Split(_searchSplits, StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var category in SearchCategories(PickSearchCategory(eventData), search))
+            foreach (var category in SearchCategories(PickSearchCategory(eventData), eventData.Path.SearchFragments))
                 eventData.AddItem(category);
 
             eventData.Canceled = true;
@@ -76,25 +75,45 @@ namespace ComponentSelectorAdditions
             if (!eventData.Path.HasSearch || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
                 return;
 
-            var search = eventData.Path.Search.Split(_searchSplits, StringSplitOptions.RemoveEmptyEntries);
             var searchCategory = PickSearchCategory(eventData);
 
             var results = searchCategory.Elements
-                .Select(type => (Category: searchCategory, Type: type, Matches: SearchContains(type.Name, search)))
+                .Select(type => (Category: searchCategory, Type: type, Matches: SearchContains(type.Name, eventData.Path.SearchFragments)))
                 .Concat(
                     SearchCategories(searchCategory)
                     .SelectMany(category => category.Elements
-                        .Select(type => (Category: category, Type: type, Matches: SearchContains(type.Name, search)))))
-                .Where(match => match.Matches > 0)
-                .OrderByDescending(match => match.Matches)
+                        .Select(type => (Category: category, Type: type, Matches: SearchContains(type.Name, eventData.Path.SearchFragments)))))
+                .Where(match => match.Matches > 0) // Extra weight for generic results when there's a generic in the search:
+                .OrderByDescending(match => match.Type.IsGenericTypeDefinition && eventData.Path.HasSearchGeneric ? match.Matches + 100 : match.Matches)
                 .ThenBy(match => match.Type.Name)
                 .Select(match => (Component: new ComponentResult(match.Category, match.Type), Order: -match.Matches));
 
             var remaining = ConfigSection.MaxResultCount;
             var knownGroups = new HashSet<string>();
+            var parsedGeneric = eventData.Path.HasSearchGeneric ? eventData.Selector.World.Types.ParseNiceType(eventData.Path.SearchGeneric, true) : null;
 
             foreach (var result in results.TakeWhile(result => (!result.Component.HasGroup || knownGroups.Add(result.Component.Group) ? --remaining : remaining) >= 0))
+            {
                 eventData.AddItem(result.Component, result.Order);
+
+                if (result.Component.IsGeneric && parsedGeneric is not null)
+                {
+                    try
+                    {
+                        var concreteType = result.Component.Type.MakeGenericType(parsedGeneric);
+
+                        if (!concreteType.IsValidGenericType(true))
+                            continue;
+
+                        --remaining;
+                        eventData.AddItem(new(result.Component.Category, concreteType), result.Order - 1);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warn(ex.LogFormat($"Failed to make generic type for component [{result.Component.NiceName}] with [{parsedGeneric.GetNiceName()}] (from \"{eventData.Path.GenericType}\")!"));
+                    }
+                }
+            }
 
             eventData.Canceled = true;
         }

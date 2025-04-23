@@ -43,6 +43,11 @@ namespace ComponentSelectorAdditions
         public bool HasGroup => Group is not null;
 
         /// <summary>
+        /// Gets whether this <see cref="Type">Type</see> is a concrete generic.
+        /// </summary>
+        public bool IsConcreteGeneric => Type.IsGenericType && !IsGeneric;
+
+        /// <summary>
         /// Gets whether this <see cref="Type">Type</see> is a generic type definition.
         /// </summary>
         public bool IsGeneric => Type.IsGenericTypeDefinition;
