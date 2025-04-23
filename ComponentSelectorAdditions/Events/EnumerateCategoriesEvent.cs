@@ -16,6 +16,7 @@ namespace ComponentSelectorAdditions.Events
         public SelectorPath Path { get; }
 
         public CategoryNode<Type> RootCategory { get; }
+
         public ComponentSelector Selector { get; }
 
         /// <inheritdoc/>

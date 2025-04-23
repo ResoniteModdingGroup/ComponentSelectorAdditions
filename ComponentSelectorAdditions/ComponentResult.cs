@@ -63,10 +63,20 @@ namespace ComponentSelectorAdditions
         /// <param name="category">The category that should be shown as the <see cref="Type">Type's</see> parent.</param>
         /// <param name="type">The component / node <see cref="System.Type"/>.</param>
         public ComponentResult(CategoryNode<Type>? category, Type type)
+            : this(category, type, type.GetCustomAttribute<GroupingAttribute>()?.GroupName)
+        { }
+
+        /// <summary>
+        /// Creates a new component / node <see cref="System.Type"/> result with the given category and group.
+        /// </summary>
+        /// <param name="category">The category that should be shown as the <see cref="Type">Type's</see> parent.</param>
+        /// <param name="type">The component / node <see cref="System.Type"/>.</param>
+        /// <param name="group">The full name of the <paramref name="type"/>'s <see cref="GroupingAttribute.GroupName">group</see> <see cref="Group">identifier</see>.</param>
+        public ComponentResult(CategoryNode<Type>? category, Type type, string? group)
         {
             Type = type;
             Category = category;
-            Group = type.GetCustomAttribute<GroupingAttribute>()?.GroupName;
+            Group = group;
             GroupName = Group?.Split('.').Last();
         }
 
