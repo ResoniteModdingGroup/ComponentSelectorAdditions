@@ -23,6 +23,8 @@ namespace ComponentSelectorAdditions
         ICancelableEventHandler<BuildCategoryButtonEvent>, ICancelableEventHandler<BuildGroupButtonEvent>, ICancelableEventHandler<BuildComponentButtonEvent>,
         IEventHandler<BuildCustomGenericBuilder>, IEventHandler<EnumerateConcreteGenericsEvent>
     {
+        private static colorX _presetConcreteColor = MathX.Average(RadiantUI_Constants.Sub.GREEN, RadiantUI_Constants.Sub.CYAN);
+
         /// <inheritdoc/>
         public int Priority => HarmonyLib.Priority.Normal;
 
@@ -197,8 +199,11 @@ namespace ComponentSelectorAdditions
             var selector = eventData.Selector;
             var component = eventData.Component;
 
+            var tint = component.IsConcreteGeneric && ConfigSection.UseSeperateConcreteGenericColor
+                ? _presetConcreteColor
+                : component.IsGeneric ? RadiantUI_Constants.Sub.GREEN : RadiantUI_Constants.Sub.CYAN;
+
             var category = GetPrettyPath(component.Category, eventData.RootCategory);
-            var tint = component.IsGeneric ? RadiantUI_Constants.Sub.GREEN : RadiantUI_Constants.Sub.CYAN;
             ButtonEventHandler<string> callback = component.IsGeneric ? selector.OpenGenericTypesPressed : selector.OnAddComponentPressed;
             var argument = $"{(component.IsGeneric ? $"{path.Path}/{component.Type.AssemblyQualifiedName}" : selector.World.Types.EncodeType(component.Type))}{(component.IsGeneric && path.HasGroup ? $"?{path.Group}" : "")}";
 

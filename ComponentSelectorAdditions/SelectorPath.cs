@@ -18,7 +18,12 @@ namespace ComponentSelectorAdditions
         /// </summary>
         public const string SearchSegment = "Search";
 
+        private static readonly char _genericParamEnd = '>';
+        private static readonly char _genericParamStart = '<';
+
         private static readonly char[] _pathSeparators = { '/', '\\' };
+
+        private static readonly char[] _searchSplits = new[] { ' ', ',', '+', '|' };
 
         /// <summary>
         /// Gets whether this path targets a generic type.
@@ -41,6 +46,12 @@ namespace ComponentSelectorAdditions
         /// </summary>
         [MemberNotNullWhen(true, nameof(Search))]
         public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        /// <summary>
+        /// Gets whether this path has a <see cref="SearchGeneric">generic argument</see> for the search.
+        /// </summary>
+        [MemberNotNullWhen(true, nameof(SearchGeneric))]
+        public bool HasSearchGeneric => !string.IsNullOrWhiteSpace(SearchGeneric);
 
         /// <summary>
         /// Gets whether this path targets the root category.
@@ -72,9 +83,42 @@ namespace ComponentSelectorAdditions
         /// </summary>
         public string? Search { get; }
 
+        /// <summary>
+        /// Gets this path's search fragments (before the <see cref="SearchGeneric">generic argument</see>).
+        /// </summary>
+        public string[] SearchFragments { get; } = Array.Empty<string>();
+
+        /// <summary>
+        /// Gets this path's generic argument for the search.
+        /// </summary>
+        public string? SearchGeneric { get; }
+
         internal SelectorPath(string? rawPath, string? search, bool genericType, string? group, bool isSelectorRoot)
         {
             Search = search;
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var genericParamStartIndex = search!.IndexOf(_genericParamStart);
+
+                if (genericParamStartIndex > 0)
+                {
+                    var generic = search[(genericParamStartIndex + 1)..];
+                    var starts = generic.Count(static c => c == _genericParamStart);
+                    var ends = generic.Count(static c => c == _genericParamEnd);
+
+                    if (starts > ends) // Automatically add any missing >
+                        generic += new string(_genericParamEnd, starts - ends);
+                    else if (ends > starts) // Probably not gonna happen often, but if someone adds a closing > to much...
+                        generic = generic.Remove(generic.Length - (ends - starts));
+
+                    SearchGeneric = generic;
+                    search = search[..genericParamStartIndex];
+                }
+
+                SearchFragments = search.Split(_searchSplits, StringSplitOptions.RemoveEmptyEntries);
+            }
+
             GenericType = genericType;
             Group = group;
             IsSelectorRoot = isSelectorRoot;
