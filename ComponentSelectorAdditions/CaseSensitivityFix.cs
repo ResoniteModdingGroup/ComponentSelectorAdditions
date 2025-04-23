@@ -8,6 +8,7 @@ using System.Text;
 
 namespace ComponentSelectorAdditions
 {
+    [HarmonyPatch]
     [HarmonyPatchCategory(nameof(CaseSensitivityFix))]
     internal sealed class CaseSensitivityFix : Monkey<CaseSensitivityFix>
     {
