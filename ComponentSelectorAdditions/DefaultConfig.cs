@@ -1,5 +1,7 @@
-﻿using MonkeyLoader.Configuration;
+﻿using Elements.Core;
+using MonkeyLoader.Configuration;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ComponentSelectorAdditions
 {
@@ -18,7 +20,7 @@ namespace ComponentSelectorAdditions
             new ConfigKeyRange<float>(32, 64)
         };
 
-        private static readonly DefiningConfigKey<bool> _useSeparateConcreteGenericColor = new("UseSeparateConcreteGenericColor", "Use a blend between the generic component buttons' green and the non-generic component buttons' cyan for concrete generics.", () => true);
+        private static readonly DefiningConfigKey<colorX?> _separateConcreteGenericColor = new("separateConcreteGenericColor", "The color to use for concrete generic buttons, if defined. Defaults to a blend between the generic component buttons' green and the non-generic component buttons' cyan.", () => colorX.FromHexCode("#255447"));
 
         /// <summary>
         /// Gets this config's instance.
@@ -44,9 +46,15 @@ namespace ComponentSelectorAdditions
         public float IndirectButtonHeight => _indirectButtonHeight;
 
         /// <summary>
-        /// Gets whether to use a blend between the generic component buttons' green and the non-generic component buttons' cyan for concrete generics.
+        /// Gets the color to use for concrete generic buttons, if defined.
         /// </summary>
-        public bool UseSeperateConcreteGenericColor => _useSeparateConcreteGenericColor;
+        public colorX? SeparateConcreteGenericColor => _separateConcreteGenericColor;
+
+        /// <summary>
+        /// Gets whether the <see cref="SeparateConcreteGenericColor">SeparateConcreteGenericColor</see> is defined.
+        /// </summary>
+        [MemberNotNullWhen(true, nameof(SeparateConcreteGenericColor))]
+        public bool UseSeparateConcreteGenericColor => _separateConcreteGenericColor.GetValue().HasValue;
 
         /// <inheritdoc/>
         public override Version Version { get; } = new Version(1, 0, 0);

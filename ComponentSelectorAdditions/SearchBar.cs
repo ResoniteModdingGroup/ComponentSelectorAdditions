@@ -12,6 +12,8 @@ using MonkeyLoader.Events;
 using System.Threading;
 using System.Globalization;
 using MonkeyLoader;
+using MonkeyLoader.Resonite.UI;
+using FrooxEngine.UIX;
 
 namespace ComponentSelectorAdditions
 {
@@ -42,6 +44,8 @@ namespace ComponentSelectorAdditions
 
             ui.Style.FlexibleWidth = 1;
             var textField = ui.TextField(null!, parseRTF: false);
+            textField.Slot.GetComponent<Button>()?.WithTooltip(Mod.GetLocaleString("Search.Tooltip"));
+
             var details = new SelectorSearchBar(searchLayout, textField.Editor.Target, () => ConfigSection.SearchRefreshDelay);
             eventData.SearchBar = details;
 
@@ -51,7 +55,7 @@ namespace ComponentSelectorAdditions
             ui.Style.FlexibleWidth = -1;
             ui.Style.ButtonTextAlignment = Alignment.MiddleCenter;
 
-            var clearButton = ui.Button("∅");
+            var clearButton = ui.Button("∅").WithTooltip(Mod.GetLocaleString("Search.Clear"));
             var clearAction = clearButton.Slot.AttachComponent<ButtonValueSet<string>>();
             clearAction.TargetValue.Target = details.Text.Content;
 
@@ -83,8 +87,8 @@ namespace ComponentSelectorAdditions
                     SearchCategories(searchCategory)
                     .SelectMany(category => category.Elements
                         .Select(type => (Category: category, Type: type, Matches: SearchContains(type.Name, eventData.Path.SearchFragments)))))
-                .Where(match => match.Matches > 0) // Extra weight for generic results when there's a generic in the search:
-                .OrderByDescending(match => match.Type.IsGenericTypeDefinition && eventData.Path.HasSearchGeneric ? match.Matches + 100 : match.Matches)
+                .Where(match => match.Matches > 0)
+                .OrderByDescending(match => match.Matches)
                 .ThenBy(match => match.Type.Name)
                 .Select(match => (Component: new ComponentResult(match.Category, match.Type), Order: -match.Matches));
 
@@ -106,7 +110,7 @@ namespace ComponentSelectorAdditions
                             continue;
 
                         --remaining;
-                        eventData.AddItem(new(result.Component.Category, concreteType), result.Order - 1);
+                        eventData.AddItem(new(result.Component.Category, concreteType), result.Order);
                     }
                     catch (Exception ex)
                     {

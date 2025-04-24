@@ -3,7 +3,11 @@
   "authors": [ "Banane9" ],
   "messages": {
     "ComponentSelectorAdditions.Search": "<i>Search ...</i>",
+    "ComponentSelectorAdditions.Search.Clear": "Clears the search field.",
+    "ComponentSelectorAdditions.Search.Tooltip": "<b>Enter your search terms here. Results will appear when you pause typing.</b><size=50%><br/><br/></size>Multiple search terms can be split using spaces. Each term gets checked for inclusion in the name of categories or a component / node. The more terms match, the higher the result is ranked.<br/>You can apply a custom generic type by entering its full definition after a <, just like you would when normally creating a generic component. Simply adding the < will already rank up all generic results.",
+
     "ComponentSelectorAdditions.EnterType": "<i>Enter Type ...</i>",
+    "ComponentSelectorAdditions.EnterType.Tooltip": "<b>Enter your type definition for the generic parameter {parameter} here. This is allowed to be ambiguous.</b><size=50%><br/><br/></size>The type definition should be written like it would be in C#, just like component names show it. For example, an integer field would be: IField<int>",
 
     "ComponentSelectorAdditions.CaseSensitivityFix.Description": "Makes picking custom generic type parameters case-insensitive. Can be disabled when the bug gets fixed.",
     "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Adds an indicator for the current category (and generic Type) path to omponent selectors.",
