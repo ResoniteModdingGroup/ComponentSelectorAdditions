@@ -6,7 +6,11 @@
     "ComponentSelectorAdditions.Description": "Dieser MonkeyLoader Mod für Resonite strukturiert Komponenten-Selektoren und ProtoFlux Nodebrowser neu und fügt eine Suchfunktion sowie Kategorien für zuletzt genutzte und favorisierte Komponenten / Nodes hinzu.",
 
     "ComponentSelectorAdditions.Search": "<i>Suchen ...</i>",
+    "ComponentSelectorAdditions.Search.Clear": "Leert das Suchfeld.",
+    "ComponentSelectorAdditions.Search.Tooltip": "<b>Gebe hier deine Suchbegriffe ein. Die Ergebnisse erscheinen, wenn du das tippen pausierst.</b><size=50%><br/><br/></size>Mehrere Suchbegriffe können mit Leerzeichen getrennt werden. Für jeden Begriff wird überprüft, ob dieser im Namen einer Kategorie oder Komponente / Node enthalten ist. Je mehr Begriffe enthalten sind, desto besser wird das Ergebnis gewertet.<br/>Du kannst einen generischen Typparameter anwenden, indem du dessen volle Definition nach einem < eingibst, genauso wie du es bei der normallen Erstellung einer generischen Komponente tun würdest. Bereits das Hinzufügen eines < verbessert die Wertung aller generischen Ergebnisse.",
+
     "ComponentSelectorAdditions.EnterType": "<i>Typ eingeben...</i>",
+    "ComponentSelectorAdditions.EnterType.Tooltip": "<b>Gebe hier die Typdefinition für den generischen Parameter {parameter} ein. Dieser darf uneindeutig sein.</b><size=50%><br/><br/></size>Die Typdefinition sollte so geschrieben werden wie in C#, genauso wie Komponentennamen es zeigen. Ein Integer Field wäre zum Beispiel: IField<int>",
 
     "ComponentSelectorAdditions.CaseSensitivityFix.Description": "Macht das Auswählen von eigenen generischen Typparametern unabhängig von Groß- und Kleinschreibung. Kann deaktiviert werden, wenn der Bug behoben wurde.",
     "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Fügt eine Anzeige für den Pfad der aktuellen Kategorie (und des generischen Typs) zu Komponenten-Selektoren hinzu.",

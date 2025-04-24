@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using MonkeyLoader.Resonite.UI;
 
 namespace ComponentSelectorAdditions
 {
@@ -23,8 +24,6 @@ namespace ComponentSelectorAdditions
         ICancelableEventHandler<BuildCategoryButtonEvent>, ICancelableEventHandler<BuildGroupButtonEvent>, ICancelableEventHandler<BuildComponentButtonEvent>,
         IEventHandler<BuildCustomGenericBuilder>, IEventHandler<EnumerateConcreteGenericsEvent>
     {
-        private static colorX _presetConcreteColor = MathX.Average(RadiantUI_Constants.Sub.GREEN, RadiantUI_Constants.Sub.CYAN);
-
         /// <inheritdoc/>
         public int Priority => HarmonyLib.Priority.Normal;
 
@@ -64,6 +63,7 @@ namespace ComponentSelectorAdditions
             {
                 var textField = ui.TextField(parseRTF: false);
                 textField.Text.NullContent.AssignLocaleString(Mod.GetLocaleString("EnterType"));
+                textField.Slot.GetComponent<Button>()?.WithTooltip(Mod.GetLocaleString("EnterType.Tooltip", "parameter", genericArgument.Name));
 
                 return textField;
             }, out var label);
@@ -199,8 +199,8 @@ namespace ComponentSelectorAdditions
             var selector = eventData.Selector;
             var component = eventData.Component;
 
-            var tint = component.IsConcreteGeneric && ConfigSection.UseSeperateConcreteGenericColor
-                ? _presetConcreteColor
+            var tint = component.IsConcreteGeneric && ConfigSection.UseSeparateConcreteGenericColor
+                ? ConfigSection.SeparateConcreteGenericColor.Value
                 : component.IsGeneric ? RadiantUI_Constants.Sub.GREEN : RadiantUI_Constants.Sub.CYAN;
 
             var category = GetPrettyPath(component.Category, eventData.RootCategory);
