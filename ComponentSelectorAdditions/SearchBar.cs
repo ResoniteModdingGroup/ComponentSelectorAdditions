@@ -98,25 +98,31 @@ namespace ComponentSelectorAdditions
 
             foreach (var result in results.TakeWhile(result => (!result.Component.HasGroup || knownGroups.Add(result.Component.Group) ? --remaining : remaining) >= 0))
             {
-                eventData.AddItem(result.Component, result.Order);
-
-                if (result.Component.IsGeneric && parsedGeneric is not null)
+                if (parsedGeneric is not null && result.Component.IsGeneric)
                 {
                     try
                     {
                         var concreteType = result.Component.Type.MakeGenericType(parsedGeneric);
 
-                        if (!concreteType.IsValidGenericType(true))
-                            continue;
+                        if (concreteType.IsValidGenericType(true))
+                        {
+                            eventData.AddItem(new(result.Component.Category, concreteType), result.Order);
 
-                        --remaining;
-                        eventData.AddItem(new(result.Component.Category, concreteType), result.Order);
+                            if (!ConfigSection.IncludeOpenGenericsWithGenericArgument)
+                                continue;
+
+                            // Decrement remaining a further time for open generic below
+                            if (!result.Component.HasGroup)
+                                --remaining;
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Logger.Warn(ex.LogFormat($"Failed to make generic type for component [{result.Component.NiceName}] with [{parsedGeneric.GetNiceName()}] (from \"{eventData.Path.GenericType}\")!"));
+                        Logger.Debug(ex.LogFormat($"Failed to make generic type for component [{result.Component.NiceName}] with [{parsedGeneric.GetNiceName()}] (from \"{eventData.Path.SearchGeneric}\")!"));
                     }
                 }
+
+                eventData.AddItem(result.Component, result.Order);
             }
 
             eventData.Canceled = true;
@@ -169,7 +175,7 @@ namespace ComponentSelectorAdditions
         }
 
         private static int SearchContains(string haystack, string[] needles)
-            => needles.Count(needle => CultureInfo.InvariantCulture.CompareInfo.IndexOf(haystack, needle, CompareOptions.IgnoreCase) >= 0);
+            => needles.Count(needle => haystack.IndexOf(needle, 0, StringComparison.OrdinalIgnoreCase) >= 0);
 
         private CategoryNode<Type> PickSearchCategory(IEnumerateSelectorResultEvent eventData)
         {

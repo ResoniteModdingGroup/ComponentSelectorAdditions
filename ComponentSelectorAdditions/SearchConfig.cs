@@ -24,6 +24,8 @@ namespace ComponentSelectorAdditions
 
         private static readonly Dictionary<string, bool> _excludedCategories = new(StringComparer.OrdinalIgnoreCase);
 
+        private static readonly DefiningConfigKey<bool> _includeOpenGenericsWithGenericArgument = new("IncludeOpenGenericsWithGenericArgument", "Include the open generic versions of components / nodes in the results even when the generic argument can be applied to them successfully.", () => false);
+
         private static readonly DefiningConfigKey<int> _maxResultCount = new("MaxResultCount", "The maximum number of component / node results to display. 'Better' results are listed first. Categories don't count.", () => 64)
         {
             new ConfigKeyRange<int>(1, 128)
@@ -35,6 +37,7 @@ namespace ComponentSelectorAdditions
         };
 
         private static readonly DefiningConfigKey<string> _userExcludedCategories = new("UserExcludedCategories", "Excludes specific categories from being searched into by path (case sensitive). Separate entries by semicolon. Search will work when started inside them.", () => "/ProtoFlux");
+
         private static readonly char[] _userExclusionSeparator = new[] { ';' };
 
         /// <summary>
@@ -47,6 +50,12 @@ namespace ComponentSelectorAdditions
 
         /// <inheritdoc/>
         public override string Id => "Search";
+
+        /// <summary>
+        /// Gets whether the open generic versions of components / nodes should be included in the results
+        /// even when the generic argument can be applied to them successfully.
+        /// </summary>
+        public bool IncludeOpenGenericsWithGenericArgument => _includeOpenGenericsWithGenericArgument;
 
         /// <summary>
         /// Gets how many results will be listed at most.
