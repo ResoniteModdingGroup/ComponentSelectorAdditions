@@ -8,7 +8,7 @@ namespace ComponentSelectorAdditions
 {
     // Make this have source and target to actually remove the types from the source?
     // Removal would be optional, of course
-    public sealed class CategoryOverride
+    internal sealed class CategoryOverride
     {
         private readonly Func<EnumerateComponentsEvent, IEnumerable<ComponentResult>> _getAdditionalComponents;
         public CategoryNode<Type> TargetCategory { get; }

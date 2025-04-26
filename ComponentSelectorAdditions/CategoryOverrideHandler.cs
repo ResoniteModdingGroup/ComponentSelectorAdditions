@@ -10,9 +10,11 @@ using System.Text;
 
 namespace ComponentSelectorAdditions
 {
-    public sealed class CategoryOverrideHandler : ResoniteCancelableEventHandlerMonkey<CategoryOverrideHandler, EnumerateComponentsEvent>
+    internal sealed class CategoryOverrideHandler : ResoniteCancelableEventHandlerMonkey<CategoryOverrideHandler, EnumerateComponentsEvent>
     {
         private static readonly Dictionary<CategoryNode<Type>, HashSet<CategoryOverride>> _overridesByCategory = new();
+
+        public override bool CanBeDisabled => true;
 
         /// <inheritdoc/>
         public override int Priority => HarmonyLib.Priority.VeryLow;
@@ -38,6 +40,9 @@ namespace ComponentSelectorAdditions
         /// <inheritdoc/>
         protected override void Handle(EnumerateComponentsEvent eventData)
         {
+            if (!Enabled)
+                return;
+
             foreach (var categoryOverride in GetOverrides(eventData.RootCategory))
             {
                 foreach (var additionalResult in categoryOverride.GetAdditionalComponents(eventData))
