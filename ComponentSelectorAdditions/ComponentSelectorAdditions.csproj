@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyTitle>ComponentSelectorAdditions</AssemblyTitle>
     <AssemblyFileName>$(AssemblyTitle).dll</AssemblyFileName>
     <RootNamespace>ComponentSelectorAdditions</RootNamespace>
@@ -16,6 +15,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ResoniteModdingGroup/ComponentSelectorAdditions</PackageProjectUrl>
+    <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
     <PackageTags>mod; mods; monkeyloader; resonite; component; attacher; selector; protoflux; node; picker; search; favorites</PackageTags>
   </PropertyGroup>
   
@@ -30,18 +30,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MicroUtils.HarmonyAnalyzers" Version="1.4.0">
+    <PackageReference Include="MicroUtils.HarmonyAnalyzers" Version="1.6.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MonkeyLoader.GamePacks.Resonite" Version="0.22.1-beta" />
+    <PackageReference Include="MonkeyLoader.GamePacks.Resonite" Version="0.24.1-beta" />
     <PackageReference Include="PolySharp" Version="1.15.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Resonite.Elements.Assets" Version="1.3.3" />
-    <PackageReference Include="Resonite.Elements.Core" Version="1.4.3" />
+    <PackageReference Include="Resonite.Elements.Core" Version="1.4.9.4" />
     <PackageReference Include="Resonite.Elements.Quantity" Version="1.2.3" />
-    <PackageReference Include="Resonite.FrooxEngine" Version="2025.3.21.23" />
+    <PackageReference Include="Resonite.FrooxEngine" Version="2025.8.25.222" />
   </ItemGroup>
 </Project>
