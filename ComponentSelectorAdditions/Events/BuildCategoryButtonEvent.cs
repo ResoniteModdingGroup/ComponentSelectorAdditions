@@ -8,6 +8,13 @@ using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions.Events
 {
+    /// <summary>
+    /// Represents the event data for the Build Category Button Event.
+    /// </summary>
+    /// <remarks>
+    /// This is used to generate the button for opening a nested
+    /// <see cref="CategoryNode{T}">category</see> in a <see cref="ComponentSelector">selector</see>.
+    /// </remarks>
     public sealed class BuildCategoryButtonEvent : BuildButtonEvent
     {
         /// <inheritdoc/>

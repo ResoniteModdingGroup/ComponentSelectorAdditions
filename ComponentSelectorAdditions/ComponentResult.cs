@@ -86,7 +86,7 @@ namespace ComponentSelectorAdditions
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => obj is ComponentResult otherResult && otherResult.Type == Type;
 
         /// <inheritdoc/>
