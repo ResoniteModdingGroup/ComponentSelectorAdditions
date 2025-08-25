@@ -137,7 +137,7 @@ namespace ComponentSelectorAdditions
                 groupCounter = new KeyCounter<string>();
                 groupNames = new HashSet<string>();
 
-                foreach (var component in enumerateComponentsData.Items.Where(component => component.HasGroup))
+                foreach (var component in enumerateComponentsData.Items.Where(component => component.HasGroup && !component.IsConcreteGeneric))
                     groupCounter.Increment(component.Group!);
             }
 
@@ -146,7 +146,8 @@ namespace ComponentSelectorAdditions
                 if (path.HasGroup && component.Group != path.Group)
                     continue;
 
-                if (!path.HasGroup && component.HasGroup && groupCounter![component.Group] > 1)
+                if (!path.HasGroup && component.HasGroup && groupCounter![component.Group] > 1
+                 && !component.IsConcreteGeneric && !(path.HasSearchGeneric && component.Type.Name.EndsWith(path.SearchGeneric, StringComparison.OrdinalIgnoreCase)))
                 {
                     if (groupNames!.Add(component.Group))
                         OnBuildGroupButton(selector, ui, rootCategory, component);
@@ -164,21 +165,21 @@ namespace ComponentSelectorAdditions
             backButton = null;
 
             var type = Type.GetType(path.PathSegments[^1]);
-            selector._genericType.Value = type;
+            selector._genericType.Value = type!;
 
             if (!doNotGenerateBack)
                 backButton = ui.Button("ComponentSelector.Back".AsLocaleKey(), RadiantUI_Constants.BUTTON_COLOR, selector.OnOpenCategoryPressed, path.OpenParentCategoryPath, 0.35f);
 
             ui.Text("ComponentSelector.CustomGenericArguments".AsLocaleKey());
 
-            var customGenericBuilderData = OnBuildCustomGenericBuilder(selector, ui, type);
+            var customGenericBuilderData = OnBuildCustomGenericBuilder(selector, ui, type!);
             customGenericButton = customGenericBuilderData.CreateCustomTypeButton!;
             otherAddedButtons = customGenericBuilderData.OtherAddedButtonsSet;
 
             ui.Panel();
             ui.NestOut();
 
-            var concreteGenericsEventData = OnEnumerateConcreteGenerics(selector, type);
+            var concreteGenericsEventData = OnEnumerateConcreteGenerics(selector, type!);
 
             if (concreteGenericsEventData.Items.Any())
             {
