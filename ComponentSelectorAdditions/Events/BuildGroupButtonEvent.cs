@@ -8,9 +8,22 @@ using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions.Events
 {
+    /// <summary>
+    /// Represents the event data for the Build Group Button Event.
+    /// </summary>
+    /// <remarks>
+    /// This is used to generate the button to open a group of components.
+    /// </remarks>
     public sealed class BuildGroupButtonEvent : BuildButtonEvent
     {
+        /// <summary>
+        /// Gets the group identifier that the button targets.
+        /// </summary>
         public string Group { get; }
+
+        /// <summary>
+        /// Gets the group name that the button should show.
+        /// </summary>
         public string GroupName { get; }
 
         /// <inheritdoc/>

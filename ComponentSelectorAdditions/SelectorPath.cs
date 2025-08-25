@@ -112,7 +112,7 @@ namespace ComponentSelectorAdditions
                     if (starts > ends) // Automatically add any missing >
                         generic += new string(_genericParamEnd, starts - ends);
                     else if (ends > starts) // Probably not gonna happen often, but if someone adds too many closing > ...
-                        generic = generic.Remove(generic.Length - (ends - starts));
+                        generic = generic[..^(ends - starts)];
 
                     SearchGeneric = generic;
                     search = search[..genericParamStartIndex];

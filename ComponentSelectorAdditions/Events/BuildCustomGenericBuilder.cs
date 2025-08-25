@@ -11,13 +11,27 @@ using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions.Events
 {
+    /// <summary>
+    /// Represents the event data for the Build Custom Generic Builder Event.
+    /// </summary>
+    /// <remarks>
+    /// This is used to generate the UI for picking custom generic arguments for generic components.
+    /// </remarks>
     public sealed class BuildCustomGenericBuilder : BuildUIEvent
     {
         internal readonly HashSet<Button> OtherAddedButtonsSet = new();
 
+        /// <summary>
+        /// Gets or sets whether a create custom type button has been added already during this event.
+        /// </summary>
+        /// <value><see langword="true"/> if a create custom type button has been added; otherwise, <see langword="false"/>.</value>
         [MemberNotNullWhen(true, nameof(CreateCustomTypeButton))]
         public bool AddsCreateCustomTypeButton => CreateCustomTypeButton is not null;
 
+        /// <summary>
+        /// Gets or sets whether the inputs for generic arguments have been added already during this event.
+        /// </summary>
+        /// <value><see langword="true"/> if the inputs for generic arguments have been added; otherwise, <see langword="false"/>.</value>
         public bool AddsGenericArgumentInputs { get; set; }
 
         /// <summary>
@@ -34,8 +48,19 @@ namespace ComponentSelectorAdditions.Events
         /// </summary>
         public Button? CreateCustomTypeButton { get; set; }
 
+        /// <summary>
+        /// Gets the generic arguments that inputs need to be generated for.
+        /// </summary>
         public Type[] GenericArguments { get; }
+
+        /// <summary>
+        /// Gets the other buttons that have been added to the custom generic builder.
+        /// </summary>
         public IEnumerable<Button> OtherAddedButtons => OtherAddedButtonsSet.AsSafeEnumerable();
+
+        /// <summary>
+        /// Gets the selector that the custom generic builder is being build for.
+        /// </summary>
         public ComponentSelector Selector { get; }
 
         internal BuildCustomGenericBuilder(ComponentSelector selector, UIBuilder ui, Type component) : base(ui)
@@ -45,12 +70,27 @@ namespace ComponentSelectorAdditions.Events
             GenericArguments = component.GetGenericArguments();
         }
 
+        /// <summary>
+        /// Adds <see cref="OtherAddedButtons">another</see> button to the custom generic builder.
+        /// </summary>
+        /// <param name="button">The button to add.</param>
+        /// <returns><see langword="true"/> if it was newly added; otherwise, <see langword="false"/>.</returns>
         public bool AddOtherButton(Button button)
             => OtherAddedButtonsSet.Add(button);
 
+        /// <summary>
+        /// Determines whether <see cref="OtherAddedButtons">another</see> button is already part of the custom generic builder.
+        /// </summary>
+        /// <param name="button">The button to check for.</param>
+        /// <returns><see langword="true"/> if it was found; otherwise, <see langword="false"/>.</returns>
         public bool HasOtherButton(Button button)
             => OtherAddedButtonsSet.Contains(button);
 
+        /// <summary>
+        /// Removes <see cref="OtherAddedButtons">another</see> button from the custom generic builder.
+        /// </summary>
+        /// <param name="button">The button to remove.</param>
+        /// <returns><see langword="true"/> if it was found and removed; otherwise, <see langword="false"/>.</returns>
         public bool RemoveOtherButton(Button button)
             => OtherAddedButtonsSet.Remove(button);
     }

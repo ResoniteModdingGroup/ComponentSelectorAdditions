@@ -153,10 +153,7 @@ namespace ComponentSelectorAdditions
         private static void LoadUserExcludedCategories(string? categoryList)
         {
             foreach (var category in ProcessCategoryString(categoryList))
-            {
-                if (!_excludedCategories.ContainsKey(category))
-                    _excludedCategories.Add(category, true);
-            }
+                _excludedCategories.TryAdd(category, true);
         }
 
         private static IEnumerable<string> ProcessCategoryString(string? categoryList)
