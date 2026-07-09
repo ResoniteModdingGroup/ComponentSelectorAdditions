@@ -2,22 +2,44 @@
   "localeCode": "en",
   "authors": [ "Banane9" ],
   "messages": {
+    "ComponentSelectorAdditions.Name": "Component Selector Additions",
+    "ComponentSelectorAdditions.Description": "This mod overhauls the Component Selector / Protoflux Node Selector to have a search, as well as favorites and recents categories.",
+
+    "ComponentSelectorAdditions.CaseSensitivityFix.Name": "Case-Sensitivity Fix",
+    "ComponentSelectorAdditions.CaseSensitivityFix.Description": "Makes picking custom generic type parameters case-insensitive. Can be disabled when the bug gets fixed.",
+
+    "ComponentSelectorAdditions.CurrentPathIndicator.Name": "Current Path Indicator",
+    "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Adds an indicator for the current category (and generic Type) path to component selectors.",
+
+    "ComponentSelectorAdditions.DefaultHandler.Name": "Default Behavior",
+    "ComponentSelectorAdditions.DefaultHandler.Description": "Handles the default behavior for the events of the Injector at normal priority.",
+
+    "ComponentSelectorAdditions.FavoritesCategories.Name": "Favorites Categories",
+    "ComponentSelectorAdditions.FavoritesCategories.Description": "Adds 'Favorites' categories to Component selectors and ProtoFlux Node browser roots and makes categories and components / nodes favoritable.",
+
+    "ComponentSelectorAdditions.FixedBackButton.Name": "Fixed Back Button",
+    "ComponentSelectorAdditions.FixedBackButton.Description": "Places the 'Back' button on Component selectors outside of the scrollable area.",
+
+    "ComponentSelectorAdditions.FixedCancelButton.Name": "Fixed Cancel Button",
+    "ComponentSelectorAdditions.FixedCancelButton.Description": "Places the 'Cancel' button on Component selectors outside of the scrollable area.",
+
+    "ComponentSelectorAdditions.GenericPresetsHandler.Name": "Generic Presets",
+    "ComponentSelectorAdditions.GenericPresetsHandler.Description": "Allows saving custom generic Type arguments as presets, which will be added to the list of Common Generic Types on any valid Component / Node.",
+
+    "ComponentSelectorAdditions.Injector.Name": "Injector",
+    "ComponentSelectorAdditions.Injector.Description": "Makes the Component selector generation and listing modular by handling it through events.",
+
+    "ComponentSelectorAdditions.RecentsCategories.Name": "Recents Categories",
+    "ComponentSelectorAdditions.RecentsCategories.Description": "Adds 'Recents' categories to the Component selector and ProtoFlux Node browser roots which display the latest used ones.",
+
+    "ComponentSelectorAdditions.SearchBar.Name": "Search Bar",
+    "ComponentSelectorAdditions.SearchBar.Description": "Adds a search bar to Component selectors which allows searching components or ProtoFlux nodes.",
+
     "ComponentSelectorAdditions.Search": "<i>Search ...</i>",
     "ComponentSelectorAdditions.Search.Clear": "Clears the search field.",
     "ComponentSelectorAdditions.Search.Tooltip": "<b>Enter your search terms here. Results will appear when you pause typing.</b><size=50%><br/><br/></size>Multiple search terms can be split using spaces. Each term gets checked for inclusion in the name of categories or a component / node. The more terms match, the higher the result is ranked.<br/>You can apply a custom generic type by entering its full definition after a <, just like you would when normally creating a generic component. Simply adding the < will already rank up all generic results.",
 
     "ComponentSelectorAdditions.EnterType": "<i>Enter Type ...</i>",
-    "ComponentSelectorAdditions.EnterType.Tooltip": "<b>Enter your type definition for the generic parameter {parameter} here. This is allowed to be ambiguous.</b><size=50%><br/><br/></size>The type definition should be written like it would be in C#, just like component names show it. For example, an integer field would be: IField<int>",
-
-    "ComponentSelectorAdditions.CaseSensitivityFix.Description": "Makes picking custom generic type parameters case-insensitive. Can be disabled when the bug gets fixed.",
-    "ComponentSelectorAdditions.CurrentPathIndicator.Description": "Adds an indicator for the current category (and generic Type) path to omponent selectors.",
-    "ComponentSelectorAdditions.DefaultHandler.Description": "Handles the default behavior for the events of the Injector at normal priority.",
-    "ComponentSelectorAdditions.FavoritesCategories.Description": "Adds 'Favorites' categories to Component selectors and ProtoFlux Node browser roots and makes categories and components / nodes favoritable.",
-    "ComponentSelectorAdditions.FixedBackButton.Description": "Places the 'Back' button on Component selectors outside of the scrollable area.",
-    "ComponentSelectorAdditions.FixedCancelButton.Description": "Places the 'Cancel' button on Component selectors outside of the scrollable area.",
-    "ComponentSelectorAdditions.GenericPresetsHandler.Description": "Allows saving custom generic Type arguments as presets, which will be added to the list of Common Generic Types on any valid Component / Node.",
-    "ComponentSelectorAdditions.Injector.Description": "Makes the Component selector generation and listing modular by handling it through events.",
-    "ComponentSelectorAdditions.RecentsCategories.Description": "Adds 'Recents' categories to the Component selector and ProtoFlux Node browser roots which display the latest used ones.",
-    "ComponentSelectorAdditions.SearchBar.Description": "Adds a searchbar to Component selectors which allows searching components or ProtoFlux nodes."
+    "ComponentSelectorAdditions.EnterType.Tooltip": "<b>Enter your type definition for the generic parameter {parameter} here. This is allowed to be ambiguous.</b><size=50%><br/><br/></size>The type definition should be written like it would be in C#, just like component names show it. For example, an integer field would be: IField<int>"
   }
 }

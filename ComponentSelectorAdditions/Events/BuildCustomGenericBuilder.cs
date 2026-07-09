@@ -2,12 +2,7 @@
 using FrooxEngine;
 using FrooxEngine.UIX;
 using MonkeyLoader.Resonite.Events;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions.Events
 {
@@ -19,7 +14,7 @@ namespace ComponentSelectorAdditions.Events
     /// </remarks>
     public sealed class BuildCustomGenericBuilder : BuildUIEvent
     {
-        internal readonly HashSet<Button> OtherAddedButtonsSet = new();
+        internal readonly HashSet<Button> OtherAddedButtonsSet = [];
 
         /// <summary>
         /// Gets or sets whether a create custom type button has been added already during this event.

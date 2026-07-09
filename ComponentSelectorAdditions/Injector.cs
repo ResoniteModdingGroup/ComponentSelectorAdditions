@@ -6,16 +6,9 @@ using FrooxEngine.UIX;
 using HarmonyLib;
 using MonkeyLoader;
 using MonkeyLoader.Events;
-using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {
@@ -28,7 +21,7 @@ namespace ComponentSelectorAdditions
         IEventSource<BuildCustomGenericBuilder>, IEventSource<EnumerateConcreteGenericsEvent>,
         IEventSource<PostProcessButtonsEvent>
     {
-        private static readonly ConditionalWeakTable<ComponentSelector, SelectorData> _selectorData = new();
+        private static readonly ConditionalWeakTable<ComponentSelector, SelectorData> _selectorData = [];
 
         private static CancelableEventDispatching<BuildCategoryButtonEvent>? _buildCategoryButton;
         private static CancelableEventDispatching<BuildComponentButtonEvent>? _buildComponentButton;
@@ -40,9 +33,8 @@ namespace ComponentSelectorAdditions
         private static CancelableEventDispatching<EnumerateComponentsEvent>? _enumerateComponents;
         private static EventDispatching<EnumerateConcreteGenericsEvent>? _enumerateConcreteGenerics;
         private static EventDispatching<PostProcessButtonsEvent>? _postProcessButtons;
-        public override bool CanBeDisabled => true;
 
-        protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
+        public override bool CanBeDisabled => true;
 
         protected override bool OnEngineReady()
         {
@@ -134,8 +126,8 @@ namespace ComponentSelectorAdditions
                 foreach (var category in enumerateCategoriesData.Items)
                     OnBuildCategoryButton(selector, ui, rootCategory, category);
 
-                groupCounter = new KeyCounter<string>();
-                groupNames = new HashSet<string>();
+                groupCounter = [];
+                groupNames = [];
 
                 foreach (var component in enumerateComponentsData.Items.Where(component => component.HasGroup && !component.IsConcreteGeneric))
                     groupCounter.Increment(component.Group!);

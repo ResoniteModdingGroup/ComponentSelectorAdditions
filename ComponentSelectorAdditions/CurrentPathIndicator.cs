@@ -3,22 +3,14 @@ using FrooxEngine;
 using FrooxEngine.UIX;
 using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {
     internal sealed class CurrentPathIndicator : ResoniteEventHandlerMonkey<CurrentPathIndicator, BuildSelectorFooterEvent>
     {
         public override bool CanBeDisabled => true;
+
         public override int Priority => HarmonyLib.Priority.Normal;
-
-        protected override bool AppliesTo(BuildSelectorFooterEvent eventData) => Enabled;
-
-        protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
 
         protected override void Handle(BuildSelectorFooterEvent eventData)
         {

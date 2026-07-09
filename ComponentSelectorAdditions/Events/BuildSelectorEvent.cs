@@ -1,7 +1,6 @@
 ﻿using FrooxEngine;
 using FrooxEngine.UIX;
 using MonkeyLoader.Resonite.Events;
-using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace ComponentSelectorAdditions.Events

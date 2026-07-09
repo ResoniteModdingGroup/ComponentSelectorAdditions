@@ -2,23 +2,17 @@
 using FrooxEngine;
 using FrooxEngine.UIX;
 using MonkeyLoader.Events;
-using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {
-    internal sealed class FavoritesCategories : ConfiguredResoniteMonkey<FavoritesCategories, FavoritesConfig>,
-        ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>,
+    internal sealed class FavoritesCategories
+        : ConfiguredResoniteCancelableEventHandlerMonkey<FavoritesCategories, FavoritesConfig, EnumerateCategoriesEvent, EnumerateComponentsEvent>,
         IEventHandler<EnumerateConcreteGenericsEvent>,
         IEventHandler<PostProcessButtonsEvent>
     {
         private const string FavoritesPath = "/Favorites";
-        private const string ProtoFluxFavoritesPath = "/ProtoFlux/Runtimes/Execution/Nodes/Favorites";
+        private const string ProtoFluxFavoritesPath = $"{ProtoFluxPath}/Favorites";
         private const string ProtoFluxPath = "/ProtoFlux/Runtimes/Execution/Nodes";
 
         private CategoryNode<Type> _favoritesCategory = null!;
@@ -27,78 +21,9 @@ namespace ComponentSelectorAdditions
         private CategoryNode<Type> _rootCategory = null!;
 
         public override bool CanBeDisabled => true;
-        public int Priority => HarmonyLib.Priority.High;
+        public override int Priority => HarmonyLib.Priority.High;
 
-        public bool SkipCanceled => true;
-
-        public void Handle(EnumerateComponentsEvent eventData)
-        {
-            if (!Enabled)
-                return;
-
-            if (eventData.RootCategory != _favoritesCategory && eventData.RootCategory != _protoFluxFavoritesCategory)
-            {
-                if (ConfigSection.SortFavoriteComponentsToTop)
-                {
-                    foreach (var element in eventData.RootCategory.Elements)
-                    {
-                        if (ConfigSection.Components.Contains(element) || ConfigSection.ProtoFluxNodes.Contains(element))
-                            eventData.AddItem(new ComponentResult(eventData.RootCategory, element), -1000, true);
-                    }
-                }
-
-                return;
-            }
-
-            var favoriteElements = (eventData.RootCategory == _favoritesCategory ? ConfigSection.Components : ConfigSection.ProtoFluxNodes)
-                .Where(type => type is not null)
-                .Select(type => (Type: type, Category: WorkerInitializer.ComponentLibrary.GetSubcategory(WorkerInitializer.GetInitInfo(type).CategoryPath)));
-
-            foreach (var element in favoriteElements)
-                eventData.AddItem(new ComponentResult(element.Category, element.Type));
-
-            eventData.Canceled = true;
-        }
-
-        public void Handle(EnumerateCategoriesEvent eventData)
-        {
-            if (!Enabled)
-                return;
-
-            if (eventData.RootCategory == _rootCategory || eventData.RootCategory == _protoFluxRootCategory)
-            {
-                if (eventData.RootCategory == _rootCategory)
-                    eventData.AddItem(_favoritesCategory, -1000, true);
-                else
-                    eventData.AddItem(_protoFluxFavoritesCategory, -1000, true);
-
-                return;
-            }
-
-            if (eventData.RootCategory != _favoritesCategory && eventData.RootCategory != _protoFluxFavoritesCategory)
-            {
-                if (ConfigSection.SortFavoriteCategoriesToTop)
-                {
-                    foreach (var category in eventData.RootCategory.Subcategories)
-                    {
-                        var path = category.GetPath();
-
-                        if (ConfigSection.Categories.Contains(path) || ConfigSection.ProtoFluxCategories.Contains(path))
-                            eventData.AddItem(category, -1000, true);
-                    }
-                }
-
-                return;
-            }
-
-            var favoriteCategories = eventData.RootCategory == _favoritesCategory ?
-                ConfigSection.Categories : ConfigSection.ProtoFluxCategories;
-
-            foreach (var category in favoriteCategories)
-                eventData.AddItem(WorkerInitializer.ComponentLibrary.GetSubcategory(category));
-
-            eventData.Canceled = true;
-        }
+        public override bool SkipCanceled => true;
 
         public void Handle(PostProcessButtonsEvent eventData)
         {
@@ -139,11 +64,74 @@ namespace ComponentSelectorAdditions
                 eventData.AddItem(concreteGeneric, ConfigSection.SortFavoriteConcreteGenericsToTop ? -100 : 0, ConfigSection.SortFavoriteConcreteGenericsToTop);
         }
 
-        protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
+        protected override void Handle(EnumerateComponentsEvent eventData)
+        {
+            if (eventData.RootCategory != _favoritesCategory && eventData.RootCategory != _protoFluxFavoritesCategory)
+            {
+                if (ConfigSection.SortFavoriteComponentsToTop)
+                {
+                    foreach (var element in eventData.RootCategory.Elements)
+                    {
+                        if (ConfigSection.Components.Contains(element) || ConfigSection.ProtoFluxNodes.Contains(element))
+                            eventData.AddItem(new ComponentResult(eventData.RootCategory, element), -1000, true);
+                    }
+                }
 
-        protected override void OnDisabled() => RemoveCategories();
+                return;
+            }
 
-        protected override void OnEnabled() => AddCategories();
+            var favoriteElements = (eventData.RootCategory == _favoritesCategory ? ConfigSection.Components : ConfigSection.ProtoFluxNodes)
+                .Where(type => type is not null)
+                .Select(type => (Type: type, Category: WorkerInitializer.ComponentLibrary.GetSubcategory(WorkerInitializer.GetInitInfo(type).CategoryPath)));
+
+            foreach (var element in favoriteElements)
+                eventData.AddItem(new ComponentResult(element.Category, element.Type));
+
+            eventData.Canceled = true;
+        }
+
+        protected override void Handle(EnumerateCategoriesEvent eventData)
+        {
+            if (eventData.RootCategory == _rootCategory || eventData.RootCategory == _protoFluxRootCategory)
+            {
+                if (eventData.RootCategory == _rootCategory)
+                    eventData.AddItem(_favoritesCategory, -1000, true);
+                else
+                    eventData.AddItem(_protoFluxFavoritesCategory, -1000, true);
+
+                return;
+            }
+
+            if (eventData.RootCategory != _favoritesCategory && eventData.RootCategory != _protoFluxFavoritesCategory)
+            {
+                if (ConfigSection.SortFavoriteCategoriesToTop)
+                {
+                    foreach (var category in eventData.RootCategory.Subcategories)
+                    {
+                        var path = category.GetPath();
+
+                        if (ConfigSection.Categories.Contains(path) || ConfigSection.ProtoFluxCategories.Contains(path))
+                            eventData.AddItem(category, -1000, true);
+                    }
+                }
+
+                return;
+            }
+
+            var favoriteCategories = eventData.RootCategory == _favoritesCategory ?
+                ConfigSection.Categories : ConfigSection.ProtoFluxCategories;
+
+            foreach (var category in favoriteCategories)
+                eventData.AddItem(WorkerInitializer.ComponentLibrary.GetSubcategory(category));
+
+            eventData.Canceled = true;
+        }
+
+        protected override void OnDisabled()
+            => RemoveCategories();
+
+        protected override void OnEnabled()
+            => AddCategories();
 
         protected override bool OnEngineReady()
         {
@@ -152,8 +140,6 @@ namespace ComponentSelectorAdditions
             _rootCategory = WorkerInitializer.ComponentLibrary;
             _protoFluxRootCategory = WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxPath);
 
-            Mod.RegisterEventHandler<EnumerateCategoriesEvent>(this);
-            Mod.RegisterEventHandler<EnumerateComponentsEvent>(this);
             Mod.RegisterEventHandler<EnumerateConcreteGenericsEvent>(this);
             Mod.RegisterEventHandler<PostProcessButtonsEvent>(this);
 
@@ -164,8 +150,6 @@ namespace ComponentSelectorAdditions
         {
             if (!applicationExiting)
             {
-                Mod.UnregisterEventHandler<EnumerateCategoriesEvent>(this);
-                Mod.UnregisterEventHandler<EnumerateComponentsEvent>(this);
                 Mod.UnregisterEventHandler<EnumerateConcreteGenericsEvent>(this);
                 Mod.UnregisterEventHandler<PostProcessButtonsEvent>(this);
 

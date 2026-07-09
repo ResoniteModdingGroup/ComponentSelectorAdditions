@@ -89,7 +89,8 @@ namespace ComponentSelectorAdditions.Events
         /// </summary>
         public ComponentSelector Selector { get; }
 
-        internal PostProcessButtonsEvent(ComponentSelector selector, SelectorPath path, UIBuilder ui, Button? backButton, Button? customGenericButton, Button? cancelButton, HashSet<Button>? otherAddedButtons)
+        internal PostProcessButtonsEvent(ComponentSelector selector, SelectorPath path, UIBuilder ui,
+                Button? backButton, Button? customGenericButton, Button? cancelButton, HashSet<Button>? otherAddedButtons)
             : base(ui)
         {
             Selector = selector;
@@ -105,21 +106,13 @@ namespace ComponentSelectorAdditions.Events
                 .Where(data => data.Relay != null)
                 .ToArray();
 
-            _categoryButtons = buttons.Where(data => data.Relay.ButtonPressed.Target == selector.OnOpenCategoryPressed)
-                .Select(data => data.Button)
-                .ToArray();
+            _categoryButtons = [.. buttons.Where(data => data.Relay.ButtonPressed.Target == selector.OnOpenCategoryPressed).Select(data => data.Button)];
 
-            _addButtons = buttons.Where(data => data.Relay.ButtonPressed.Target == selector.OnAddComponentPressed)
-                .Select(data => data.Button)
-                .ToArray();
+            _addButtons = [.. buttons.Where(data => data.Relay.ButtonPressed.Target == selector.OnAddComponentPressed).Select(data => data.Button)];
 
-            _genericButtons = buttons.Where(data => data.Relay.ButtonPressed.Target == selector.OpenGenericTypesPressed)
-                .Select(data => data.Button)
-                .ToArray();
+            _genericButtons = [.. buttons.Where(data => data.Relay.ButtonPressed.Target == selector.OpenGenericTypesPressed).Select(data => data.Button)];
 
-            _groupButtons = buttons.Where(data => data.Relay.ButtonPressed.Target == selector.OpenGroupPressed)
-                .Select(data => data.Button)
-                .ToArray();
+            _groupButtons = [.. buttons.Where(data => data.Relay.ButtonPressed.Target == selector.OpenGroupPressed).Select(data => data.Button)];
         }
     }
 }

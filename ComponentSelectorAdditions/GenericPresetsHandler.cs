@@ -3,30 +3,20 @@ using Elements.Core;
 using EnumerableToolkit;
 using FrooxEngine;
 using FrooxEngine.UIX;
-using MonkeyLoader;
-using MonkeyLoader.Events;
-using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {
-    internal sealed class GenericPresetsHandler : ConfiguredResoniteMonkey<GenericPresetsHandler, GenericPresetsConfig>,
-        IEventHandler<BuildCustomGenericBuilder>, IEventHandler<EnumerateConcreteGenericsEvent>
+    internal sealed class GenericPresetsHandler
+        : ConfiguredResoniteEventHandlerMonkey<GenericPresetsHandler, GenericPresetsConfig, BuildCustomGenericBuilder, EnumerateConcreteGenericsEvent>
     {
         public override bool CanBeDisabled => true;
-        public int Priority => HarmonyLib.Priority.High;
 
-        public void Handle(EnumerateConcreteGenericsEvent eventData)
+        public override int Priority => HarmonyLib.Priority.High;
+
+        protected override void Handle(EnumerateConcreteGenericsEvent eventData)
         {
-            if (!Enabled)
-                return;
-
             var parameters = eventData.Component.GetGenericArguments().Length;
             var concreteOptions = ConfigSection.GenericArgumentPresets
                 .Where(preset => preset.Length == parameters)
@@ -37,11 +27,8 @@ namespace ComponentSelectorAdditions
                 eventData.AddItem(concreteOption!);
         }
 
-        public void Handle(BuildCustomGenericBuilder eventData)
+        protected override void Handle(BuildCustomGenericBuilder eventData)
         {
-            if (!Enabled)
-                return;
-
             var ui = eventData.UI;
             var selector = eventData.Selector;
 
@@ -89,27 +76,6 @@ namespace ComponentSelectorAdditions
                         RadiantUI_Constants.Hero.YELLOW : RadiantUI_Constants.Neutrals.DARKLIGHT;
                 }
             }
-        }
-
-        protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
-
-        protected override bool OnEngineReady()
-        {
-            Mod.RegisterEventHandler<BuildCustomGenericBuilder>(this);
-            Mod.RegisterEventHandler<EnumerateConcreteGenericsEvent>(this);
-
-            return base.OnEngineReady();
-        }
-
-        protected override bool OnShutdown(bool applicationExiting)
-        {
-            if (!applicationExiting)
-            {
-                Mod.UnregisterEventHandler<BuildCustomGenericBuilder>(this);
-                Mod.RegisterEventHandler<EnumerateConcreteGenericsEvent>(this);
-            }
-
-            return base.OnShutdown(applicationExiting);
         }
 
         private static bool IsPreset(Sequence<Type> arguments)
