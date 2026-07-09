@@ -1,10 +1,5 @@
 ﻿using HarmonyLib;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {
@@ -21,9 +16,9 @@ namespace ComponentSelectorAdditions
         private static readonly char _genericParamEnd = '>';
         private static readonly char _genericParamStart = '<';
 
-        private static readonly char[] _pathSeparators = { '/', '\\' };
+        private static readonly char[] _pathSeparators = ['/', '\\'];
 
-        private static readonly char[] _searchSplits = new[] { ' ', '.', ',', ';', '?', '!', '+', '|', '&', '`', '´', '"', '(', ')', '/', '\\', '\n', '\r', '\t' };
+        private static readonly char[] _searchSplits = [' ', '.', ',', ';', '?', '!', '+', '|', '&', '`', '´', '"', '(', ')', '/', '\\', '\n', '\r', '\t'];
 
         /// <summary>
         /// Gets whether this path targets a generic type.
@@ -86,7 +81,7 @@ namespace ComponentSelectorAdditions
         /// <summary>
         /// Gets this path's search fragments (before the <see cref="SearchGeneric">generic argument</see>).
         /// </summary>
-        public string[] SearchFragments { get; } = Array.Empty<string>();
+        public string[] SearchFragments { get; } = [];
 
         /// <summary>
         /// Gets this path's generic argument for the search.
@@ -125,7 +120,7 @@ namespace ComponentSelectorAdditions
             Group = group;
             IsSelectorRoot = isSelectorRoot;
 
-            PathSegments = rawPath?.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToArray() ?? Array.Empty<string>();
+            PathSegments = rawPath?.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToArray() ?? [];
             Path = $"/{PathSegments.Join(delimiter: "/")}";
         }
     }

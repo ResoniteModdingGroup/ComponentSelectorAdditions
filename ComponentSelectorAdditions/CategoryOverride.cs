@@ -1,8 +1,5 @@
 ﻿using ComponentSelectorAdditions.Events;
 using FrooxEngine;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ComponentSelectorAdditions
 {

@@ -4,12 +4,7 @@ using MonkeyLoader.Configuration;
 using MonkeyLoader.Resonite.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {
@@ -20,25 +15,25 @@ namespace ComponentSelectorAdditions
     /// </summary>
     public sealed class SearchConfig : SingletonConfigSection<SearchConfig>
     {
-        private static readonly DefiningConfigKey<bool> _alwaysSearchRoot = new("AlwaysSearchRoot", "Always starts searching from the root category, regardless of the current one.", () => false);
+        private readonly DefiningConfigKey<bool> _alwaysSearchRoot = new("AlwaysSearchRoot", "Always starts searching from the root category, regardless of the current one.", () => false);
 
-        private static readonly Dictionary<string, bool> _excludedCategories = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, bool> _excludedCategories = new(StringComparer.OrdinalIgnoreCase);
 
-        private static readonly DefiningConfigKey<bool> _includeOpenGenericsWithGenericArgument = new("IncludeOpenGenericsWithGenericArgument", "Include the open generic versions of components / nodes in the results even when the generic argument can be applied to them successfully.", () => false);
+        private readonly DefiningConfigKey<bool> _includeOpenGenericsWithGenericArgument = new("IncludeOpenGenericsWithGenericArgument", "Include the open generic versions of components / nodes in the results even when the generic argument can be applied to them successfully.", () => false);
 
-        private static readonly DefiningConfigKey<int> _maxResultCount = new("MaxResultCount", "The maximum number of component / node results to display. 'Better' results are listed first. Categories don't count.", () => 64)
+        private readonly DefiningConfigKey<int> _maxResultCount = new("MaxResultCount", "The maximum number of component / node results to display. 'Better' results are listed first. Categories don't count.", () => 64)
         {
             new ConfigKeyRange<int>(1, 128)
         };
 
-        private static readonly DefiningConfigKey<float> _searchRefreshDelay = new("SearchRefreshDelay", "Time to wait after search input change before refreshing the results. 0 to always refresh.", () => .4f)
+        private readonly DefiningConfigKey<float> _searchRefreshDelay = new("SearchRefreshDelay", "Time to wait after search input change before refreshing the results. 0 to always refresh.", () => .4f)
         {
-            new ConfigKeyQuantity<float, Time>(new UnitConfiguration("s", "0", " ", new [] {"s", "ms"}), null, 0, 2)
+            new ConfigKeyQuantity<float, Time>(new UnitConfiguration("s", "0", " ", ["s", "ms"]), null, 0, 2)
         };
 
-        private static readonly DefiningConfigKey<string> _userExcludedCategories = new("UserExcludedCategories", "Excludes specific categories from being searched into by path (case sensitive). Separate entries by semicolon. Search will work when started inside them.", () => "/ProtoFlux");
+        private readonly DefiningConfigKey<string> _userExcludedCategories = new("UserExcludedCategories", "Excludes specific categories from being searched into by path (case sensitive). Separate entries by semicolon. Search will work when started inside them.", () => "/ProtoFlux");
 
-        private static readonly char[] _userExclusionSeparator = new[] { ';' };
+        private readonly char[] _userExclusionSeparator = [';'];
 
         /// <summary>
         /// Gets whether the search always searches from the root category of the component selector / node browser.
@@ -70,7 +65,8 @@ namespace ComponentSelectorAdditions
         /// <inheritdoc/>
         public override Version Version { get; } = new(1, 0, 0);
 
-        static SearchConfig()
+        /// <inheritdoc/>
+        public SearchConfig()
         {
             _userExcludedCategories.Changed += UserExcludedCategoriesChanged;
         }
@@ -150,20 +146,20 @@ namespace ComponentSelectorAdditions
             LoadUserExcludedCategories(_userExcludedCategories);
         }
 
-        private static void LoadUserExcludedCategories(string? categoryList)
+        private void LoadUserExcludedCategories(string? categoryList)
         {
             foreach (var category in ProcessCategoryString(categoryList))
                 _excludedCategories.TryAdd(category, true);
         }
 
-        private static IEnumerable<string> ProcessCategoryString(string? categoryList)
+        private IEnumerable<string> ProcessCategoryString(string? categoryList)
             => categoryList?
                 .Split(_userExclusionSeparator, StringSplitOptions.RemoveEmptyEntries)
                 .Select(category => category.Trim())
                 .Where(category => !string.IsNullOrWhiteSpace(category))
-            ?? Enumerable.Empty<string>();
+            ?? [];
 
-        private static void UserExcludedCategoriesChanged(object sender, ConfigKeyChangedEventArgs<string> configKeyChangedEventArgs)
+        private void UserExcludedCategoriesChanged(object sender, ConfigKeyChangedEventArgs<string> configKeyChangedEventArgs)
         {
             foreach (var category in ProcessCategoryString(configKeyChangedEventArgs.OldValue))
             {

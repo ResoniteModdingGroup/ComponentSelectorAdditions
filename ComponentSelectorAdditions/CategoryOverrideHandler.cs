@@ -2,18 +2,15 @@
 using EnumerableToolkit;
 using FrooxEngine;
 using MonkeyLoader.Resonite;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
 
 namespace ComponentSelectorAdditions
 {
     internal sealed class CategoryOverrideHandler : ResoniteCancelableEventHandlerMonkey<CategoryOverrideHandler, EnumerateComponentsEvent>
     {
-        private static readonly Dictionary<CategoryNode<Type>, HashSet<CategoryOverride>> _overridesByCategory = new();
+        private static readonly Dictionary<CategoryNode<Type>, HashSet<CategoryOverride>> _overridesByCategory = [];
 
+        /// <inheritdoc/>
         public override bool CanBeDisabled => true;
 
         /// <inheritdoc/>
@@ -26,7 +23,7 @@ namespace ComponentSelectorAdditions
             => _overridesByCategory.GetOrCreateValue(categoryOverride.TargetCategory).Add(categoryOverride);
 
         public static IEnumerable<CategoryOverride> GetOverrides(CategoryNode<Type> category)
-            => _overridesByCategory.TryGetValue(category, out var overrides) ? overrides.AsSafeEnumerable() : Enumerable.Empty<CategoryOverride>();
+            => _overridesByCategory.TryGetValue(category, out var overrides) ? overrides.AsSafeEnumerable() : [];
 
         public static bool HasAnyOverride(CategoryNode<Type> category)
             => _overridesByCategory.TryGetValue(category, out var overrides) && overrides.Count > 0;

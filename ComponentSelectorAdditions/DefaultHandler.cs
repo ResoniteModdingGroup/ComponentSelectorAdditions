@@ -4,14 +4,7 @@ using FrooxEngine.UIX;
 using FrooxEngine;
 using HarmonyLib;
 using MonkeyLoader.Events;
-using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 using MonkeyLoader.Resonite.UI;
 
 namespace ComponentSelectorAdditions
@@ -19,16 +12,17 @@ namespace ComponentSelectorAdditions
     /// <summary>
     /// Handles the default behavior for the <see cref="Injector"/> events.
     /// </summary>
-    public sealed class DefaultHandler : ConfiguredResoniteMonkey<DefaultHandler, DefaultConfig>,
-        ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>,
-        ICancelableEventHandler<BuildCategoryButtonEvent>, ICancelableEventHandler<BuildGroupButtonEvent>, ICancelableEventHandler<BuildComponentButtonEvent>,
+    public sealed class DefaultHandler
+        : ConfiguredResoniteCancelableEventHandlerMonkey<DefaultHandler, DefaultConfig,
+            EnumerateCategoriesEvent, EnumerateComponentsEvent,
+            BuildCategoryButtonEvent, BuildGroupButtonEvent, BuildComponentButtonEvent>,
         IEventHandler<BuildCustomGenericBuilder>, IEventHandler<EnumerateConcreteGenericsEvent>
     {
         /// <inheritdoc/>
-        public int Priority => HarmonyLib.Priority.Normal;
+        public override int Priority => HarmonyLib.Priority.Normal;
 
         /// <inheritdoc/>
-        public bool SkipCanceled => true;
+        public override bool SkipCanceled => true;
 
         /// <summary>
         /// Formats the path from the <paramref name="rootCategory"/> to the <paramref name="subCategory"/>
@@ -125,49 +119,6 @@ namespace ComponentSelectorAdditions
             ui.PopStyle();
         }
 
-        void ICancelableEventHandler<EnumerateComponentsEvent>.Handle(EnumerateComponentsEvent eventData)
-        {
-            var types = eventData.RootCategory.Elements;
-
-            if (eventData.Path.HasGroup)
-            {
-                static IEnumerable<Type> GetAllSubElements(CategoryNode<Type> category)
-                    => category.Elements.Concat(category.Subcategories.SelectMany(GetAllSubElements));
-
-                types = GetAllSubElements(eventData.RootCategory);
-            }
-
-            foreach (var type in types)
-                eventData.AddItem(new ComponentResult(eventData.RootCategory, type));
-
-            eventData.Canceled = true;
-        }
-
-        void ICancelableEventHandler<EnumerateCategoriesEvent>.Handle(EnumerateCategoriesEvent eventData)
-        {
-            if (!eventData.Path.HasGroup)
-            {
-                foreach (var subcategory in eventData.RootCategory.Subcategories)
-                    eventData.AddItem(subcategory);
-            }
-
-            eventData.Canceled = true;
-        }
-
-        void ICancelableEventHandler<BuildGroupButtonEvent>.Handle(BuildGroupButtonEvent eventData)
-        {
-            var selector = eventData.Selector;
-
-            var category = GetPrettyPath(eventData.ItemCategory, eventData.RootCategory);
-            var tint = RadiantUI_Constants.Sub.PURPLE;
-            var argument = $"{eventData.RootCategory!.GetPath()}:{eventData.Group}";
-            var nonLocalArgument = $"{eventData.ItemCategory!.GetPath()}:{eventData.Group}";
-
-            MakePermanentButton(eventData.UI, eventData.GroupName, tint, selector.OpenGroupPressed, argument, category, nonLocalArgument);
-
-            eventData.Canceled = true;
-        }
-
         void IEventHandler<EnumerateConcreteGenericsEvent>.Handle(EnumerateConcreteGenericsEvent eventData)
         {
             foreach (var concreteGeneric in WorkerInitializer.GetCommonGenericTypes(eventData.Component))
@@ -193,7 +144,54 @@ namespace ComponentSelectorAdditions
                 eventData.CreateCustomTypeButton = ui.Button((LocaleString)string.Empty, RadiantUI_Constants.BUTTON_COLOR, selector.OnCreateCustomType, .35f);
         }
 
-        void ICancelableEventHandler<BuildComponentButtonEvent>.Handle(BuildComponentButtonEvent eventData)
+        /// <inheritdoc/>
+        protected override void Handle(EnumerateComponentsEvent eventData)
+        {
+            var types = eventData.RootCategory.Elements;
+
+            if (eventData.Path.HasGroup)
+            {
+                static IEnumerable<Type> GetAllSubElements(CategoryNode<Type> category)
+                    => category.Elements.Concat(category.Subcategories.SelectMany(GetAllSubElements));
+
+                types = GetAllSubElements(eventData.RootCategory);
+            }
+
+            foreach (var type in types)
+                eventData.AddItem(new ComponentResult(eventData.RootCategory, type));
+
+            eventData.Canceled = true;
+        }
+
+        /// <inheritdoc/>
+        protected override void Handle(EnumerateCategoriesEvent eventData)
+        {
+            if (!eventData.Path.HasGroup)
+            {
+                foreach (var subcategory in eventData.RootCategory.Subcategories)
+                    eventData.AddItem(subcategory);
+            }
+
+            eventData.Canceled = true;
+        }
+
+        /// <inheritdoc/>
+        protected override void Handle(BuildGroupButtonEvent eventData)
+        {
+            var selector = eventData.Selector;
+
+            var category = GetPrettyPath(eventData.ItemCategory, eventData.RootCategory);
+            var tint = RadiantUI_Constants.Sub.PURPLE;
+            var argument = $"{eventData.RootCategory!.GetPath()}:{eventData.Group}";
+            var nonLocalArgument = $"{eventData.ItemCategory!.GetPath()}:{eventData.Group}";
+
+            MakePermanentButton(eventData.UI, eventData.GroupName, tint, selector.OpenGroupPressed, argument, category, nonLocalArgument);
+
+            eventData.Canceled = true;
+        }
+
+        /// <inheritdoc/>
+        protected override void Handle(BuildComponentButtonEvent eventData)
         {
             var path = eventData.Path;
             var selector = eventData.Selector;
@@ -212,7 +210,8 @@ namespace ComponentSelectorAdditions
             eventData.Canceled = true;
         }
 
-        void ICancelableEventHandler<BuildCategoryButtonEvent>.Handle(BuildCategoryButtonEvent eventData)
+        /// <inheritdoc/>
+        protected override void Handle(BuildCategoryButtonEvent eventData)
         {
             MakePermanentButton(eventData.UI, GetPrettyPath(eventData.ItemCategory, eventData.RootCategory),
                 RadiantUI_Constants.Sub.YELLOW,
@@ -223,18 +222,8 @@ namespace ComponentSelectorAdditions
         }
 
         /// <inheritdoc/>
-        protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
-
-        /// <inheritdoc/>
         protected override bool OnLoaded()
         {
-            Mod.RegisterEventHandler<EnumerateCategoriesEvent>(this);
-            Mod.RegisterEventHandler<EnumerateComponentsEvent>(this);
-
-            Mod.RegisterEventHandler<BuildCategoryButtonEvent>(this);
-            Mod.RegisterEventHandler<BuildGroupButtonEvent>(this);
-            Mod.RegisterEventHandler<BuildComponentButtonEvent>(this);
-
             Mod.RegisterEventHandler<BuildCustomGenericBuilder>(this);
             Mod.RegisterEventHandler<EnumerateConcreteGenericsEvent>(this);
 
@@ -246,13 +235,6 @@ namespace ComponentSelectorAdditions
         {
             if (!applicationExiting)
             {
-                Mod.UnregisterEventHandler<EnumerateCategoriesEvent>(this);
-                Mod.UnregisterEventHandler<EnumerateComponentsEvent>(this);
-
-                Mod.UnregisterEventHandler<BuildCategoryButtonEvent>(this);
-                Mod.UnregisterEventHandler<BuildGroupButtonEvent>(this);
-                Mod.UnregisterEventHandler<BuildComponentButtonEvent>(this);
-
                 Mod.UnregisterEventHandler<BuildCustomGenericBuilder>(this);
                 Mod.UnregisterEventHandler<EnumerateConcreteGenericsEvent>(this);
             }

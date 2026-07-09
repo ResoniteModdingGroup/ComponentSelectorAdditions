@@ -1,11 +1,6 @@
 ﻿using Elements.Core;
 using FrooxEngine.UIX;
 using FrooxEngine;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComponentSelectorAdditions
 {

@@ -1,32 +1,25 @@
 ﻿using ComponentSelectorAdditions.Events;
 using Elements.Core;
 using FrooxEngine;
-using MonkeyLoader.Patching;
 using MonkeyLoader.Resonite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MonkeyLoader.Events;
-using System.Threading;
-using System.Globalization;
 using MonkeyLoader;
 using MonkeyLoader.Resonite.UI;
 using FrooxEngine.UIX;
 
 namespace ComponentSelectorAdditions
 {
-    internal sealed class SearchBar : ConfiguredResoniteMonkey<SearchBar, SearchConfig>, IEventHandler<BuildSelectorHeaderEvent>,
-        ICancelableEventHandler<EnumerateCategoriesEvent>, ICancelableEventHandler<EnumerateComponentsEvent>
+    internal sealed class SearchBar
+        : ConfiguredResoniteCancelableEventHandlerMonkey<SearchBar, SearchConfig, EnumerateCategoriesEvent, EnumerateComponentsEvent>,
+        IEventHandler<BuildSelectorHeaderEvent>
     {
         private const string ProtoFluxPath = "/ProtoFlux/Runtimes/Execution/Nodes";
 
         public override bool CanBeDisabled => true;
 
-        public int Priority => HarmonyLib.Priority.VeryHigh;
+        public override int Priority => HarmonyLib.Priority.VeryHigh;
 
-        public bool SkipCanceled => true;
+        public override bool SkipCanceled => true;
 
         public void Handle(BuildSelectorHeaderEvent eventData)
         {
@@ -63,7 +56,7 @@ namespace ComponentSelectorAdditions
             ui.NestOut();
         }
 
-        public void Handle(EnumerateCategoriesEvent eventData)
+        protected override void Handle(EnumerateCategoriesEvent eventData)
         {
             if (!eventData.Path.HasSearch || ((eventData.Path.IsSelectorRoot || ConfigSection.AlwaysSearchRoot) && eventData.Path.Search.Length < 3 && eventData.Path.SearchFragments.Length > 0))
                 return;
@@ -74,7 +67,7 @@ namespace ComponentSelectorAdditions
             eventData.Canceled = true;
         }
 
-        public void Handle(EnumerateComponentsEvent eventData)
+        protected override void Handle(EnumerateComponentsEvent eventData)
         {
             if (!eventData.Path.HasSearch || (eventData.Path.IsSelectorRoot && eventData.Path.Search.Length < 3))
                 return;
@@ -128,13 +121,9 @@ namespace ComponentSelectorAdditions
             eventData.Canceled = true;
         }
 
-        protected override IEnumerable<IFeaturePatch> GetFeaturePatches() => Enumerable.Empty<IFeaturePatch>();
-
         protected override bool OnEngineReady()
         {
             Mod.RegisterEventHandler<BuildSelectorHeaderEvent>(this);
-            Mod.RegisterEventHandler<EnumerateCategoriesEvent>(this);
-            Mod.RegisterEventHandler<EnumerateComponentsEvent>(this);
 
             return base.OnEngineReady();
         }
@@ -142,13 +131,20 @@ namespace ComponentSelectorAdditions
         protected override bool OnShutdown(bool applicationExiting)
         {
             if (!applicationExiting)
-            {
                 Mod.UnregisterEventHandler<BuildSelectorHeaderEvent>(this);
-                Mod.UnregisterEventHandler<EnumerateCategoriesEvent>(this);
-                Mod.UnregisterEventHandler<EnumerateComponentsEvent>(this);
-            }
 
             return base.OnShutdown(applicationExiting);
+        }
+
+        private static CategoryNode<Type> PickSearchCategory(IEnumerateSelectorResultEvent eventData)
+        {
+            var isProtoFlux = eventData.Path.Path.StartsWith(ProtoFluxPath);
+
+            return ConfigSection.AlwaysSearchRoot
+                ? (isProtoFlux
+                    ? WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxPath)
+                    : WorkerInitializer.ComponentLibrary)
+                : eventData.RootCategory;
         }
 
         private static IEnumerable<CategoryNode<Type>> SearchCategories(CategoryNode<Type> root, string[]? search = null)
@@ -176,16 +172,5 @@ namespace ComponentSelectorAdditions
 
         private static int SearchContains(string haystack, string[] needles)
             => needles.Count(needle => haystack.IndexOf(needle, 0, StringComparison.OrdinalIgnoreCase) >= 0);
-
-        private CategoryNode<Type> PickSearchCategory(IEnumerateSelectorResultEvent eventData)
-        {
-            var isProtoFlux = eventData.Path.Path.StartsWith(ProtoFluxPath);
-
-            return ConfigSection.AlwaysSearchRoot
-                ? (isProtoFlux
-                    ? WorkerInitializer.ComponentLibrary.GetSubcategory(ProtoFluxPath)
-                    : WorkerInitializer.ComponentLibrary)
-                : eventData.RootCategory;
-        }
     }
 }
