@@ -1,9 +1,9 @@
-﻿<Project Sdk="Remora.Resonite.Sdk/2.3.1">
+﻿<Project Sdk="Remora.Resonite.Sdk/2.3.4">
   <PropertyGroup>
     <PackageId>ComponentSelectorAdditions</PackageId>
     <Title>Component Selector Additions</Title>
     <Authors>Banane9</Authors>
-    <Version>0.10.1-beta</Version>
+    <Version>0.10.2-beta</Version>
     <Description>This MonkeyLoader mod for Resonite overhauls the Component Selector / Protoflux Node Selector to have a search, as well as favorites and recents categories.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
